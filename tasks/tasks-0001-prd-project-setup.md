@@ -58,7 +58,7 @@
   - [x] 2.5 Create `backend/data/docs/` subdirectories for technical/, billing/, and compliance/ document categories (branch: feat/2.5-backend-data-docs-subdirs)
   - [x] 2.6 Create `backend/Dockerfile` for containerizing the FastAPI application (branch: feat/2.6-backend-dockerfile)
   - [x] 2.7 Create `backend/pytest.ini` with test configuration (branch: feat/2.7-backend-pytest-ini)
-  - [ ] 2.8 Create placeholder test file `backend/tests/test_main.py` to verify pytest setup
+  - [x] 2.8 Create placeholder test file `backend/tests/test_main.py` to verify pytest setup (branch: feat/2.8-backend-test-main)
   - [ ] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
 
 - [ ] 3.0 Set Up Frontend (Next.js) Infrastructure
