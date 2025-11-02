@@ -68,7 +68,7 @@
   - [x] 3.4 Create `frontend/.env.example` with NEXT_PUBLIC_API_URL (branch: feat/3.4-frontend-env-example)
   - [x] 3.5 Verify basic project structure: components/, lib/, app/ directories (branch: feat/3.5-verify-project-structure)
   - [x] 3.6 Create placeholder page in `app/page.tsx` with "Customer Service AI" title (branch: feat/3.6-placeholder-page)
-  - [ ] 3.7 Create root layout in `src/app/layout.tsx` with proper HTML structure and TypeScript types
+  - [x] 3.7 Create root layout in `src/app/layout.tsx` with proper HTML structure and TypeScript types (branch: feat/3.7-root-layout)
   - [ ] 3.8 Verify and customize ESLint configuration for Next.js with TypeScript (auto-created)
   - [ ] 3.9 Create `frontend/README.md` documenting structure, setup, and development server
 
