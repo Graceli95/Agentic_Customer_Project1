@@ -62,7 +62,7 @@
   - [ ] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
 
 - [ ] 3.0 Set Up Frontend (Next.js) Infrastructure
-  - [x] 3.1 Initialize Next.js 16+ project with App Router using `pnpm create next-app` with TypeScript
+  - [x] 3.1 Initialize Next.js 16+ project with App Router using `pnpm create next-app` with TypeScript (branch: feat/3.1-nextjs-typescript-setup)
   - [ ] 3.2 Verify TypeScript configuration in `tsconfig.json` and customize if needed
   - [ ] 3.3 Set up Tailwind CSS configuration and verify it's working
   - [ ] 3.4 Create `frontend/.env.example` with NEXT_PUBLIC_API_URL
