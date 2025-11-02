@@ -50,7 +50,7 @@
   - [x] 1.5 Add `.gitkeep` files to empty directories that need to be tracked
   - [x] 1.6 Initialize Git repository and verify it's properly configured (already done, verify state)
 
-- [ ] 2.0 Set Up Backend (Python/FastAPI) Infrastructure
+- [x] 2.0 Set Up Backend (Python/FastAPI) Infrastructure
   - [x] 2.1 Create `backend/requirements.txt` with all LangChain v1.0+ dependencies (fastapi, langchain, langchain-community, langchain-openai, langgraph, chromadb, uvicorn, pydantic, python-dotenv, boto3, pytest, ruff) (branch: feat/2.1-backend-requirements)
   - [x] 2.2 Create `backend/.env.example` with all required environment variables and detailed comments (branch: feat/2.2-backend-env-example)
   - [x] 2.3 Create `backend/main.py` with basic FastAPI app structure, CORS configuration, and placeholder /health endpoint (branch: feat/2.3-backend-main-fastapi)
@@ -59,7 +59,7 @@
   - [x] 2.6 Create `backend/Dockerfile` for containerizing the FastAPI application (branch: feat/2.6-backend-dockerfile)
   - [x] 2.7 Create `backend/pytest.ini` with test configuration (branch: feat/2.7-backend-pytest-ini)
   - [x] 2.8 Create placeholder test file `backend/tests/test_main.py` to verify pytest setup (branch: feat/2.8-backend-test-main)
-  - [ ] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
+  - [x] 2.9 Create `backend/README.md` documenting structure, setup, and how to run (branch: feat/2.9-backend-readme)
 
 - [ ] 3.0 Set Up Frontend (Next.js) Infrastructure
   - [x] 3.1 Initialize Next.js 16+ project with App Router using `pnpm create next-app` with TypeScript (branch: feat/3.1-nextjs-typescript-setup)
