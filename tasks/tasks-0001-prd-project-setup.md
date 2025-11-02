@@ -87,7 +87,7 @@
   - [x] 5.2 Configure backend linting job to use `ruff` for Python code checking (branch: feat/5.1-5.4-github-actions-lint-workflow)
   - [x] 5.3 Configure frontend linting job to use `eslint` for TypeScript checking (branch: feat/5.1-5.4-github-actions-lint-workflow)
   - [x] 5.4 Set workflow to trigger on pull requests to main branch (branch: feat/5.1-5.4-github-actions-lint-workflow)
-  - [ ] 5.5 Create `.github/PULL_REQUEST_TEMPLATE.md` with checklist and sections for description, testing, and related issues
+  - [x] 5.5 Create `.github/PULL_REQUEST_TEMPLATE.md` with checklist and sections for description, testing, and related issues (branch: feat/5.5-pr-template)
   - [ ] 5.6 Document in README how to enable branch protection rules on GitHub (requires GitHub UI, provide instructions)
 
 - [ ] 6.0 Validate Complete Setup End-to-End
