@@ -1,7 +1,7 @@
 # Task List: Project Setup and Structure
 
 **Based on PRD**: 0001-prd-project-setup.md  
-**Created**: November 2, 2025  
+**Created**: November 1, 2025  
 **Status**: Ready for Implementation
 
 ---
@@ -48,16 +48,16 @@
   - [x] 1.5 Add `.gitkeep` files to empty directories that need to be tracked
   - [x] 1.6 Initialize Git repository and verify it's properly configured (already done, verify state)
 
-- [ ] 2.0 Set Up Backend (Python/FastAPI) Infrastructure
-  - [ ] 2.1 Create `backend/requirements.txt` with all LangChain v1.0+ dependencies (fastapi, langchain, langchain-community, langchain-openai, langgraph, chromadb, uvicorn, pydantic, python-dotenv, boto3, pytest, ruff)
-  - [ ] 2.2 Create `backend/.env.example` with all required environment variables and detailed comments
-  - [ ] 2.3 Create `backend/main.py` with basic FastAPI app structure, CORS configuration, and placeholder /health endpoint
-  - [ ] 2.4 Add `__init__.py` files to all Python package directories (agents/, agents/workers/, data/, utils/, tests/)
-  - [ ] 2.5 Create `backend/data/docs/` subdirectories for technical/, billing/, and compliance/ document categories
-  - [ ] 2.6 Create `backend/Dockerfile` for containerizing the FastAPI application
-  - [ ] 2.7 Create `backend/pytest.ini` with test configuration
-  - [ ] 2.8 Create placeholder test file `backend/tests/test_main.py` to verify pytest setup
-  - [ ] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
+- [x] 2.0 Set Up Backend (Python/FastAPI) Infrastructure
+  - [x] 2.1 Create `backend/requirements.txt` with all LangChain v1.0+ dependencies (fastapi, langchain, langchain-community, langchain-openai, langgraph, chromadb, uvicorn, pydantic, python-dotenv, boto3, pytest, ruff)
+  - [x] 2.2 Create `backend/.env.example` with all required environment variables and detailed comments
+  - [x] 2.3 Create `backend/main.py` with basic FastAPI app structure, CORS configuration, and placeholder /health endpoint
+  - [x] 2.4 Add `__init__.py` files to all Python package directories (agents/, agents/workers/, data/, utils/, tests/)
+  - [x] 2.5 Create `backend/data/docs/` subdirectories for technical/, billing/, and compliance/ document categories
+  - [x] 2.6 Create `backend/Dockerfile` for containerizing the FastAPI application
+  - [x] 2.7 Create `backend/pytest.ini` with test configuration
+  - [x] 2.8 Create placeholder test file `backend/tests/test_main.py` to verify pytest setup
+  - [x] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
 
 - [ ] 3.0 Set Up Frontend (Next.js) Infrastructure
   - [ ] 3.1 Initialize Next.js 14+ project with App Router using `pnpm create next-app`
