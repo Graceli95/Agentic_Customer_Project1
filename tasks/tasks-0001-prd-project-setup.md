@@ -69,7 +69,7 @@
   - [x] 3.5 Verify basic project structure: components/, lib/, app/ directories (branch: feat/3.5-verify-project-structure)
   - [x] 3.6 Create placeholder page in `app/page.tsx` with "Customer Service AI" title (branch: feat/3.6-placeholder-page)
   - [x] 3.7 Create root layout in `src/app/layout.tsx` with proper HTML structure and TypeScript types (branch: feat/3.7-root-layout)
-  - [ ] 3.8 Verify and customize ESLint configuration for Next.js with TypeScript (auto-created)
+  - [x] 3.8 Verify and customize ESLint configuration for Next.js with TypeScript (auto-created) (branch: feat/3.8-eslint-config)
   - [ ] 3.9 Create `frontend/README.md` documenting structure, setup, and development server
 
 - [ ] 4.0 Create Comprehensive Documentation
