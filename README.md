@@ -185,7 +185,7 @@ Agentic_Customer_Project1/
 ├── ARCHITECTURE.md            # System architecture docs
 ├── FLOWCHARTS.md             # Process flow diagrams
 ├── PHASED_DEVELOPMENT_GUIDE.md # Development roadmap
-├── CONTRIBUTING.md           # Contribution guidelines (to be created)
+├── CONTRIBUTING.md           # Contribution guidelines
 └── README.md                 # This file
 ```
 
@@ -378,7 +378,7 @@ This project follows **GitHub Flow** with feature branches:
    git push origin main
    ```
 
-**📚 For detailed contribution guidelines, see CONTRIBUTING.md** (to be created)
+**📚 For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)**
 
 ---
 
@@ -502,6 +502,7 @@ This project includes comprehensive documentation:
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Complete system architecture, design patterns, and technical decisions |
 | **[FLOWCHARTS.md](./FLOWCHARTS.md)** | Visual process flows, sequence diagrams, and system interactions |
 | **[PHASED_DEVELOPMENT_GUIDE.md](./PHASED_DEVELOPMENT_GUIDE.md)** | Development roadmap with phases, milestones, and implementation details |
+| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Contribution guidelines, Git workflow, and coding standards |
 | **[backend/README.md](./backend/README.md)** | Backend-specific setup, API documentation, and development guidelines |
 | **[frontend/README.md](./frontend/README.md)** | Frontend-specific setup, component guide, and styling documentation |
 | **[agentic-customer-specs.md](./agentic-customer-specs.md)** | Original project specifications and requirements |
@@ -520,7 +521,7 @@ We follow a structured development process:
 5. **Testing**: All features must include tests
 6. **Documentation**: Update relevant docs with changes
 
-**Full contribution guidelines coming soon in CONTRIBUTING.md**
+**For complete contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)**
 
 ---
 
