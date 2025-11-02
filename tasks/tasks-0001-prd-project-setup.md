@@ -76,7 +76,7 @@
 
 - [ ] 4.0 Create Comprehensive Documentation
   - [x] 4.1 Update root `README.md` with comprehensive setup instructions, prerequisites, and quick start guide (branch: feat/4.1-comprehensive-root-readme)
-  - [ ] 4.2 Create `CONTRIBUTING.md` documenting GitHub Flow branching strategy, commit message format (Conventional Commits), and PR process
+  - [x] 4.2 Create `CONTRIBUTING.md` documenting GitHub Flow branching strategy, commit message format (Conventional Commits), and PR process (branch: feat/4.2-contributing-guide)
   - [ ] 4.3 Add links in root README to ARCHITECTURE.md, PHASED_DEVELOPMENT_GUIDE.md, and FLOWCHARTS.md
   - [ ] 4.4 Document the monorepo structure and explain backend/frontend separation in README
   - [ ] 4.5 Create setup scripts section in README with commands for backend and frontend setup
