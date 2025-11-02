@@ -380,6 +380,72 @@ This project follows **GitHub Flow** with feature branches:
 
 **📚 For detailed contribution guidelines, see [CONTRIBUTING.md](./CONTRIBUTING.md)**
 
+### GitHub Branch Protection Rules
+
+To maintain code quality and prevent accidental changes to the main branch, it's recommended to enable branch protection rules on GitHub.
+
+**⚠️ Note**: Branch protection rules can only be configured through the GitHub web interface and require repository admin access.
+
+#### Recommended Protection Rules for `main` Branch
+
+1. **Navigate to Repository Settings:**
+   - Go to your repository on GitHub
+   - Click **Settings** (requires admin access)
+   - Click **Branches** in the left sidebar
+   - Click **Add branch protection rule**
+
+2. **Configure Branch Name Pattern:**
+   - Set **Branch name pattern** to: `main`
+
+3. **Enable Required Status Checks:**
+   - ✅ **Require status checks to pass before merging**
+   - ✅ **Require branches to be up to date before merging**
+   - Select required checks:
+     - `Backend (Python) - Ruff`
+     - `Frontend (TypeScript) - ESLint`
+     - `Backend Tests (pytest)` (optional but recommended)
+     - `Frontend TypeScript Check` (optional but recommended)
+
+4. **Enable Pull Request Requirements (Optional but Recommended):**
+   - ✅ **Require a pull request before merging**
+   - ✅ **Require approvals**: Set to 1 or more reviewers
+   - ✅ **Dismiss stale pull request approvals when new commits are pushed**
+
+5. **Additional Recommended Settings:**
+   - ✅ **Require conversation resolution before merging**
+   - ✅ **Do not allow bypassing the above settings** (keeps even admins accountable)
+   - ✅ **Restrict who can push to matching branches** (optional for team environments)
+
+6. **Click "Create"** to save the protection rules
+
+#### What This Protects Against
+
+- ❌ Direct pushes to `main` without review (if PR required)
+- ❌ Merging code that fails linting checks
+- ❌ Merging code that fails tests
+- ❌ Merging code with unresolved review comments
+- ❌ Accidentally force-pushing to `main`
+
+#### For Solo Development
+
+If you're working alone and find PR requirements too restrictive:
+
+- Enable **only** the required status checks (linting and tests)
+- Skip the "Require pull request" option
+- You can still push directly to `main`, but linting/tests must pass
+
+#### Testing Branch Protection
+
+After enabling, try to:
+1. Push directly to `main` - Should be blocked if PR required
+2. Create a PR with failing tests - Should show checks failing
+3. Fix the issues and push again - Checks should pass and allow merge
+
+#### More Information
+
+- [GitHub Branch Protection Documentation](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)
+- [GitHub Status Checks](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks)
+
 ---
 
 ## 🧪 Testing

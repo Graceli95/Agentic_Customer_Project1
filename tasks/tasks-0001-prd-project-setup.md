@@ -82,13 +82,13 @@
   - [x] 4.5 Create setup scripts section in README with commands for backend and frontend setup (completed in 4.1, verified in feat/4.3-4.6-enhance-readme-sections)
   - [x] 4.6 Add troubleshooting section to README for common setup issues (completed in 4.1, verified in feat/4.3-4.6-enhance-readme-sections)
 
-- [ ] 5.0 Configure CI/CD Pipeline and Branch Protection
+- [x] 5.0 Configure CI/CD Pipeline and Branch Protection
   - [x] 5.1 Create `.github/workflows/lint.yml` with jobs for both backend and frontend linting (branch: feat/5.1-5.4-github-actions-lint-workflow)
   - [x] 5.2 Configure backend linting job to use `ruff` for Python code checking (branch: feat/5.1-5.4-github-actions-lint-workflow)
   - [x] 5.3 Configure frontend linting job to use `eslint` for TypeScript checking (branch: feat/5.1-5.4-github-actions-lint-workflow)
   - [x] 5.4 Set workflow to trigger on pull requests to main branch (branch: feat/5.1-5.4-github-actions-lint-workflow)
   - [x] 5.5 Create `.github/PULL_REQUEST_TEMPLATE.md` with checklist and sections for description, testing, and related issues (branch: feat/5.5-pr-template)
-  - [ ] 5.6 Document in README how to enable branch protection rules on GitHub (requires GitHub UI, provide instructions)
+  - [x] 5.6 Document in README how to enable branch protection rules on GitHub (requires GitHub UI, provide instructions) (branch: feat/5.6-branch-protection-docs)
 
 - [ ] 6.0 Validate Complete Setup End-to-End
   - [ ] 6.1 Create virtual environment for backend and install all dependencies from requirements.txt
