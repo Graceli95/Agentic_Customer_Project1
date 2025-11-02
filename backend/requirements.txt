@@ -10,13 +10,13 @@ pydantic-settings>=2.0.0
 # LangChain Core (v1.0+)
 langchain>=1.0.0
 langchain-core>=1.0.0
-langchain-community>=1.0.0
+langchain-community>=0.3.0
 
 # LangChain Integrations
-langchain-openai>=1.0.0
+langchain-openai>=0.2.0
 
 # LangGraph for agent orchestration
-langgraph>=1.0.0
+langgraph>=0.2.0
 
 # Vector Database
 chromadb>=0.4.0
