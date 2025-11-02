@@ -70,7 +70,9 @@
   - [x] 3.6 Create placeholder page in `app/page.tsx` with "Customer Service AI" title (branch: feat/3.6-placeholder-page)
   - [x] 3.7 Create root layout in `src/app/layout.tsx` with proper HTML structure and TypeScript types (branch: feat/3.7-root-layout)
   - [x] 3.8 Verify and customize ESLint configuration for Next.js with TypeScript (auto-created) (branch: feat/3.8-eslint-config)
-  - [ ] 3.9 Create `frontend/README.md` documenting structure, setup, and development server
+  - [x] 3.9 Create `frontend/README.md` documenting structure, setup, and development server (branch: feat/3.9-frontend-readme)
+
+- [x] 3.0 Set Up Frontend (Next.js) Infrastructure
 
 - [ ] 4.0 Create Comprehensive Documentation
   - [ ] 4.1 Update root `README.md` with comprehensive setup instructions, prerequisites, and quick start guide
