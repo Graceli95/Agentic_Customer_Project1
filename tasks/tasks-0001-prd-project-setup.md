@@ -51,7 +51,7 @@
   - [x] 1.6 Initialize Git repository and verify it's properly configured (already done, verify state)
 
 - [ ] 2.0 Set Up Backend (Python/FastAPI) Infrastructure
-  - [ ] 2.1 Create `backend/requirements.txt` with all LangChain v1.0+ dependencies (fastapi, langchain, langchain-community, langchain-openai, langgraph, chromadb, uvicorn, pydantic, python-dotenv, boto3, pytest, ruff)
+  - [x] 2.1 Create `backend/requirements.txt` with all LangChain v1.0+ dependencies (fastapi, langchain, langchain-community, langchain-openai, langgraph, chromadb, uvicorn, pydantic, python-dotenv, boto3, pytest, ruff) (branch: feat/2.1-backend-requirements)
   - [ ] 2.2 Create `backend/.env.example` with all required environment variables and detailed comments
   - [ ] 2.3 Create `backend/main.py` with basic FastAPI app structure, CORS configuration, and placeholder /health endpoint
   - [ ] 2.4 Add `__init__.py` files to all Python package directories (agents/, agents/workers/, data/, utils/, tests/)

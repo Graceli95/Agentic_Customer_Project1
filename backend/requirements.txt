@@ -1,0 +1,43 @@
+# FastAPI Web Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Pydantic for data validation
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# LangChain Core (v1.0+)
+langchain>=1.0.0
+langchain-core>=1.0.0
+langchain-community>=1.0.0
+
+# LangChain Integrations
+langchain-openai>=1.0.0
+
+# LangGraph for agent orchestration
+langgraph>=1.0.0
+
+# Vector Database
+chromadb>=0.4.0
+
+# AWS Bedrock Support
+boto3>=1.28.0
+botocore>=1.31.0
+
+# Environment Variables
+python-dotenv>=1.0.0
+
+# HTTP Client
+httpx>=0.25.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Linting and Code Quality
+ruff>=0.1.0
+
+# Additional Dependencies
+aiofiles>=23.2.0
