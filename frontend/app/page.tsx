@@ -1,65 +1,156 @@
-import Image from "next/image";
-
 export default function Home() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex min-h-screen flex-col items-center justify-center p-8">
+      {/* Hero Section */}
+      <main className="flex w-full max-w-5xl flex-col items-center text-center">
+        {/* Icon/Logo Placeholder */}
+        <div className="mb-8 flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+          <svg
+            className="h-12 w-12 text-white"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </svg>
+        </div>
+
+        {/* Title */}
+        <h1 className="mb-4 text-5xl font-bold tracking-tight text-gray-900 dark:text-gray-50 sm:text-6xl md:text-7xl">
+          Customer Service AI
+        </h1>
+
+        {/* Subtitle */}
+        <p className="mb-8 max-w-2xl text-xl text-gray-600 dark:text-gray-400 sm:text-2xl">
+          Advanced Multi-Agent AI System for Intelligent Customer Support
+        </p>
+
+        {/* Description */}
+        <div className="mb-12 max-w-3xl space-y-4 text-lg text-gray-700 dark:text-gray-300">
+          <p>
+            Powered by <span className="font-semibold text-blue-600 dark:text-blue-400">LangChain v1.0+</span> and{' '}
+            <span className="font-semibold text-purple-600 dark:text-purple-400">LangGraph</span>,
+            our intelligent system handles:
+          </p>
+          <ul className="mx-auto max-w-md space-y-2 text-left">
+            <li className="flex items-start">
+              <span className="mr-2 text-green-500">✓</span>
+              <span>Technical support inquiries</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2 text-green-500">✓</span>
+              <span>Billing and payment questions</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2 text-green-500">✓</span>
+              <span>Compliance and policy information</span>
+            </li>
+            <li className="flex items-start">
+              <span className="mr-2 text-green-500">✓</span>
+              <span>General customer service requests</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* Status Badge */}
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
+          </span>
+          In Development - Phase 1: Project Setup
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid w-full max-w-4xl grid-cols-1 gap-6 md:grid-cols-3">
+          {/* Card 1 */}
+          <div className="card">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
+              <svg
+                className="h-6 w-6 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-50">
+              Lightning Fast
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Real-time responses powered by advanced AI agents
+            </p>
+          </div>
+
+          {/* Card 2 */}
+          <div className="card">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900">
+              <svg
+                className="h-6 w-6 text-purple-600 dark:text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-50">
+              Secure & Compliant
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Enterprise-grade security with RAG-powered knowledge base
+            </p>
+          </div>
+
+          {/* Card 3 */}
+          <div className="card">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-cyan-100 dark:bg-cyan-900">
+              <svg
+                className="h-6 w-6 text-cyan-600 dark:text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-50">
+              Multi-Agent System
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Specialized agents for technical, billing, and compliance
+            </p>
+          </div>
+        </div>
+
+        {/* Footer Note */}
+        <div className="mt-16 text-sm text-gray-500 dark:text-gray-500">
+          <p>Built with Next.js 16, TypeScript, Tailwind CSS, FastAPI, and LangChain v1.0+</p>
         </div>
       </main>
     </div>
   );
 }
+
