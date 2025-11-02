@@ -57,7 +57,7 @@
   - [x] 2.4 Add `__init__.py` files to all Python package directories (agents/, agents/workers/, data/, utils/, tests/) (branch: feat/2.4-backend-init-files)
   - [x] 2.5 Create `backend/data/docs/` subdirectories for technical/, billing/, and compliance/ document categories (branch: feat/2.5-backend-data-docs-subdirs)
   - [x] 2.6 Create `backend/Dockerfile` for containerizing the FastAPI application (branch: feat/2.6-backend-dockerfile)
-  - [ ] 2.7 Create `backend/pytest.ini` with test configuration
+  - [x] 2.7 Create `backend/pytest.ini` with test configuration (branch: feat/2.7-backend-pytest-ini)
   - [ ] 2.8 Create placeholder test file `backend/tests/test_main.py` to verify pytest setup
   - [ ] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
 
