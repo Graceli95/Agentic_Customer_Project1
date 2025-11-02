@@ -20,8 +20,9 @@
 - `backend/utils/__init__.py` - Utilities package structure (to be created)
 - `frontend/package.json` - Frontend dependencies (to be created)
 - `frontend/.env.example` - Frontend environment template (to be created)
-- `frontend/src/app/page.js` - Main Next.js page (to be created)
-- `frontend/src/app/layout.js` - Root layout (to be created)
+- `frontend/src/app/page.tsx` - Main Next.js page with TypeScript (to be created)
+- `frontend/src/app/layout.tsx` - Root layout with TypeScript (to be created)
+- `frontend/tsconfig.json` - TypeScript configuration (to be created)
 - `frontend/README.md` - Frontend documentation (to be created)
 - `docker-compose.yml` - Docker orchestration (to be created)
 - `CONTRIBUTING.md` - Contribution guidelines (to be created)
@@ -35,6 +36,7 @@
 - Frontend tests will use Jest (configuration to be added)
 - All environment variables must be documented in `.env.example` files
 - Docker is optional for development but recommended for consistency
+- **TypeScript** is used for the frontend (not JavaScript) for better type safety and maintainability
 
 ---
 
@@ -60,14 +62,14 @@
   - [ ] 2.9 Create `backend/README.md` documenting structure, setup, and how to run
 
 - [ ] 3.0 Set Up Frontend (Next.js) Infrastructure
-  - [ ] 3.1 Initialize Next.js 14+ project with App Router using `pnpm create next-app`
-  - [ ] 3.2 Configure Next.js with TypeScript disabled (use JavaScript per project convention)
+  - [x] 3.1 Initialize Next.js 16+ project with App Router using `pnpm create next-app` with TypeScript
+  - [ ] 3.2 Verify TypeScript configuration in `tsconfig.json` and customize if needed
   - [ ] 3.3 Set up Tailwind CSS configuration and verify it's working
   - [ ] 3.4 Create `frontend/.env.example` with NEXT_PUBLIC_API_URL
-  - [ ] 3.5 Create basic project structure: src/components/, src/lib/, src/app/
-  - [ ] 3.6 Create placeholder page in `src/app/page.js` with "Customer Service AI" title
-  - [ ] 3.7 Create root layout in `src/app/layout.js` with proper HTML structure
-  - [ ] 3.8 Add ESLint configuration for Next.js (should be auto-created, verify and customize)
+  - [ ] 3.5 Verify basic project structure: src/components/, src/lib/, src/app/ (auto-created)
+  - [ ] 3.6 Create placeholder page in `src/app/page.tsx` with "Customer Service AI" title
+  - [ ] 3.7 Create root layout in `src/app/layout.tsx` with proper HTML structure and TypeScript types
+  - [ ] 3.8 Verify and customize ESLint configuration for Next.js with TypeScript (auto-created)
   - [ ] 3.9 Create `frontend/README.md` documenting structure, setup, and development server
 
 - [ ] 4.0 Create Comprehensive Documentation
@@ -81,7 +83,7 @@
 - [ ] 5.0 Configure CI/CD Pipeline and Branch Protection
   - [ ] 5.1 Create `.github/workflows/lint.yml` with jobs for both backend and frontend linting
   - [ ] 5.2 Configure backend linting job to use `ruff` for Python code checking
-  - [ ] 5.3 Configure frontend linting job to use `eslint` for JavaScript checking
+  - [ ] 5.3 Configure frontend linting job to use `eslint` for TypeScript checking
   - [ ] 5.4 Set workflow to trigger on pull requests to main branch
   - [ ] 5.5 Create `.github/PULL_REQUEST_TEMPLATE.md` with checklist and sections for description, testing, and related issues
   - [ ] 5.6 Document in README how to enable branch protection rules on GitHub (requires GitHub UI, provide instructions)

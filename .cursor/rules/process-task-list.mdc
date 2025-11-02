@@ -1,50 +1,159 @@
 ---
 alwaysApply: false
 ---
+
 # Task List Management
 
 Guidelines for managing task lists in markdown files to track progress on completing a PRD
 
 ## Task Implementation
-- **One sub-task at a time:** Do **NOT** start the next sub‑task until you ask the user for permission and they say "yes" or "y"
-- **Completion protocol:**  
-  1. When you finish a **sub‑task**, immediately mark it as completed by changing `[ ]` to `[x]`.
-  2. If **all** subtasks underneath a parent task are now `[x]`, follow this sequence:
-    - **First**: Run the full test suite (`pytest`, `npm test`, `bin/rails test`, etc.)
-    - **Only if all tests pass**: Stage changes (`git add .`)
-    - **Clean up**: Remove any temporary files and temporary code before committing
-    - **Commit**: Use a descriptive commit message that:
-      - Uses conventional commit format (`feat:`, `fix:`, `refactor:`, etc.)
-      - Summarizes what was accomplished in the parent task
-      - Lists key changes and additions
-      - References the task number and PRD context
-      - **Formats the message as a single-line command using `-m` flags**, e.g.:
 
-        ```
-        git commit -m "feat: add payment validation logic" -m "- Validates card type and expiry" -m "- Adds unit tests for edge cases" -m "Related to T123 in PRD"
-        ```
-  3. Once all the subtasks are marked completed and changes have been committed, mark the **parent task** as completed.
-- Stop after each sub‑task and wait for the user's go‑ahead.
+- **One sub-task at a time:** Do **NOT** start the next sub-task until you ask the user for permission and they say "yes" or "y".
+
+- **Sub-task branches only (no PRs):**  
+  - Each **sub-task** has its **own feature branch**: `feat/<task-number>-<subtask-name>`.
+    - Example: `feat/1.2-user-login-api`
+  - **Parent tasks** in Markdown are grouping only — no branches for them.  
+  - Always branch from the **latest `main`**:
+    ```bash
+    git checkout main
+    git pull origin main
+    git checkout -b feat/<task-number>-<subtask-name>
+    ```
+
+- **Completion protocol (per sub-task):**  
+  1. **Finish the sub-task**, then immediately mark it `[x]` in the task list.
+
+  2. **Run tests (if applicable):**
+     - If the project includes automated tests, run the full test suite:
+       ```bash
+       pytest         # or npm test / bin/rails test / etc.
+       ```
+       Fix issues and re-run until all pass.
+     - If **no test files** exist yet, perform a **manual check**:
+       - Verify the new feature works as expected.
+       - Confirm nothing else is broken or missing.
+       - Optionally note "Manual verification only" in your commit message.
+
+  3. **Clean up before committing:**
+     - Remove temporary files (`.tmp`, debug logs, etc.)
+     - Remove debug code and console.logs
+     - Ensure no commented-out code remains
+
+  4. **Stage & Commit** with conventional commits and multi-line `-m`:
+     ```bash
+     git add .
+     git commit -m "feat: <short summary of sub-task>" \
+     -m "- Key changes line 1" \
+     -m "- Key changes line 2" \
+     -m "Related to Task <task-number> in <PRD reference>"
+     ```
+     
+     **Example:**
+     ```bash
+     git commit -m "feat: implement user authentication endpoint" \
+     -m "- Added POST /api/auth/login route" \
+     -m "- Implemented JWT token generation" \
+     -m "- Added password hashing with bcrypt" \
+     -m "Related to Task 1.2 in PRD-0001-user-auth"
+     ```
+
+  5. **Push the feature branch** (required for backup and history):
+     ```bash
+     git push -u origin $(git branch --show-current)
+     ```
+
+  6. **Merge directly into `main` (no PR):**
+     ```bash
+     git checkout main
+     git pull origin main
+     git merge --no-ff feat/<task-number>-<subtask-name>
+     ```
+     
+     **If merge conflicts occur:**
+     - Resolve conflicts in affected files
+     - Run tests again after resolution
+     - Complete the merge with `git commit`
+     
+     **If tests fail after merge:**
+     - Use `git reset --hard HEAD~1` to undo merge
+     - Return to feature branch to fix issues
+     - Re-attempt merge after fixes pass tests
+
+     **After successful merge:**
+     - If tests exist, re-run them on `main`
+     - If no tests exist, verify main still builds and runs correctly
+     ```bash
+     git push origin main
+     ```
+
+  7. **Keep the feature branch** (for history):
+     - Do **NOT** delete feature branches locally or remotely
+     - They serve as historical reference points
+
+  8. **Ready for next sub-task:**  
+     - Ensure `main` is current (`git pull origin main`)
+     - **STOP and wait for user approval** before creating the next sub-task branch
+
+  9. **Parent task completion:**
+     - Mark the **parent task** `[x]` once:
+       1. **All** subtasks are `[x]`
+       2. All subtask branches are merged to `main`
+       3. Main branch tests pass
+
+---
 
 ## Task List Maintenance
 
 1. **Update the task list as you work:**
-   - Mark tasks and subtasks as completed (`[x]`) per the protocol above.
+   - Mark tasks and subtasks as completed (`[x]`) per the protocol.
    - Add new tasks as they emerge.
+   - Optionally include the branch name next to completed sub-tasks:
+     ```
+     [x] 1.2 Add user login API  (branch: feat/1.2-user-login-api)
+     ```
 
 2. **Maintain the "Relevant Files" section:**
-   - List every file created or modified.
-   - Give each file a one‑line description of its purpose.
+   - List every created/modified file.
+   - One-line purpose for each file.
+
+---
 
 ## AI Instructions
 
 When working with task lists, the AI must:
 
-1. Regularly update the task list file after finishing any significant work.
-2. Follow the completion protocol:
-   - Mark each finished **sub‑task** `[x]`.
-   - Mark the **parent task** `[x]` once **all** its subtasks are `[x]`.
-3. Add newly discovered tasks.
-4. Keep "Relevant Files" accurate and up to date.
-5. Before starting work, check which sub‑task is next.
-6. After implementing a sub‑task, update the file and then pause for user approval.
+1. Regularly update the task list file after finishing significant work.
+
+2. Follow the completion protocol exactly:
+   - Mark each finished **sub-task** `[x]`.
+   - Commit code on its sub-task branch.
+   - **Push the feature branch to remote** (required).
+   - **Directly merge** the sub-task branch into `main` locally (no PRs).
+   - If no test suite exists, perform a **manual verification step** instead.
+   - Mark the **parent task** `[x]` once **all** subtasks are `[x]` and merged to `main`.
+
+3. Add newly discovered subtasks as needed.
+
+4. Keep "Relevant Files" accurate and current.
+
+5. Before starting work:
+   - Check which sub-task is next.
+   - Confirm the correct branch context (`main` vs `feat/...`).
+
+6. After implementing a sub-task:
+   - Update the task list file.
+   - Merge to `main`, push `main`.
+   - **Pause for user approval** before creating the next branch.
+
+---
+
+✅ **Summary**
+
+- Every sub-task = a **feature branch** off `main` (format: `feat/<task-number>-<subtask-name>`)
+- **ONE SUB-TASK AT A TIME** — Stop and get approval after each merge
+- **No PRs**: merge locally with `git merge --no-ff`
+- Test if possible; if not, **manually verify** behavior before pushing
+- **Always push feature branches** to remote (required for backup)
+- **Keep all feature branches** for historical reference (do not delete)
+- Flow: Commit → Push branch → Merge → Push main → **PAUSE** → Approve → Next sub-task
