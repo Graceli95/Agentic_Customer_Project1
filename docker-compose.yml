@@ -1,0 +1,89 @@
+# ============================================================================
+# Docker Compose Configuration
+# Advanced Multi-Agent Customer Service AI
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # Backend Service (FastAPI + LangChain + LangGraph)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: customer-service-ai-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Application Settings
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - HOST=0.0.0.0
+      - PORT=8000
+      
+      # CORS Settings (frontend URL)
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+      
+      # API Keys (Set these in .env file or pass at runtime)
+      # - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      # - LANGSMITH_TRACING=${LANGSMITH_TRACING:-false}
+      # - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-customer-service-ai}
+      
+      # AWS Settings (if using Bedrock)
+      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      # - AWS_REGION=${AWS_REGION:-us-east-1}
+    volumes:
+      # Persist ChromaDB data
+      - chroma_data:/app/chroma_db
+      
+      # Mount source code for development (optional - comment out for production)
+      # - ./backend:/app
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+# Networks
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  chroma_data:
+    driver: local
+
+# ============================================================================
+# Usage Instructions
+# ============================================================================
+#
+# Development:
+#   docker-compose up --build
+#   docker-compose up -d  (detached mode)
+#   docker-compose logs -f backend
+#   docker-compose down
+#
+# Production:
+#   docker-compose -f docker-compose.yml up -d
+#   docker-compose ps
+#   docker-compose restart backend
+#
+# Environment Variables:
+#   Create a .env file in the root directory:
+#     OPENAI_API_KEY=your_key_here
+#     LANGSMITH_API_KEY=your_key_here
+#     LANGSMITH_TRACING=true
+#
+# Access:
+#   Backend API: http://localhost:8000
+#   API Docs: http://localhost:8000/docs
+#   Health Check: http://localhost:8000/health
+#
+
