@@ -18,8 +18,8 @@
 - `backend/tests/test_main.py` - **UPDATE**: Integration tests for /chat endpoint with agent
 
 ### Frontend Files
-- `frontend/lib/sessionManager.js` - **NEW**: Session ID generation and management utilities
-- `frontend/lib/api.js` - **NEW**: Backend API client with session ID support
+- `frontend/lib/sessionManager.ts` - **CREATED**: Session ID generation and management utilities with UUID v4 and localStorage
+- `frontend/lib/api.ts` - **NEW**: Backend API client with session ID support
 - `frontend/app/page.tsx` - **UPDATE**: Transform landing page into chat interface with session management
 - `frontend/components/ChatInterface.tsx` - **NEW**: Main chat container component
 - `frontend/components/MessageList.tsx` - **NEW**: Display conversation history
@@ -53,7 +53,7 @@
   - [x] 2.4 Add startup validation to check for OPENAI_API_KEY and initialize agent at startup
 
 - [ ] 3.0 Frontend: Session Management Implementation
-  - [ ] 3.1 Create `frontend/lib/sessionManager.ts` with UUID generation and localStorage utilities
+  - [x] 3.1 Create `frontend/lib/sessionManager.ts` with UUID generation and localStorage utilities (branch: feat/phase2-3.1-create-session-manager)
   - [ ] 3.2 Create `frontend/lib/api.ts` for backend API client with session ID support
   - [ ] 3.3 Add session initialization logic to generate/retrieve UUID on first load
 

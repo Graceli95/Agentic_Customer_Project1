@@ -2,40 +2,39 @@
   "compilerOptions": {
     /* Language and Environment */
     "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "jsx": "preserve",
-    
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "jsx": "react-jsx",
     /* Modules */
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowJs": true,
-    
     /* Emit */
     "noEmit": true,
     "incremental": true,
     "isolatedModules": true,
-    
     /* Interop Constraints */
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
-    
     /* Type Checking */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    
     /* Completeness */
     "skipLibCheck": true,
-    
     /* Path Mapping */
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
-    
     /* Next.js */
     "plugins": [
       {
@@ -51,5 +50,7 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
