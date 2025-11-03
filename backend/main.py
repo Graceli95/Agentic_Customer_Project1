@@ -16,8 +16,8 @@ import os
 import logging
 import re
 
-# Import LangChain agent
-from backend.agents import get_agent
+# Import LangChain agent (Phase 3: using supervisor for multi-agent routing)
+from agents import get_supervisor
 
 # Load environment variables
 load_dotenv()
@@ -298,10 +298,10 @@ async def chat_endpoint(request: ChatRequest):
         logger.info(f"Received chat request for session: {request.session_id}")
         logger.debug(f"Message: {request.message[:50]}...")  # Log first 50 chars
 
-        # Get the LangChain agent
+        # Get the supervisor agent (Phase 3: routes to specialized workers)
         # This may raise RuntimeError if agent isn't initialized (missing API key)
         try:
-            agent = get_agent()
+            agent = get_supervisor()
         except RuntimeError as e:
             logger.error(f"Agent not initialized: {e}")
             raise HTTPException(
@@ -531,12 +531,13 @@ async def startup_event():
     logger.info("Initializing LangChain agent...")
 
     try:
-        # Attempt to get the agent (this validates the configuration)
-        test_agent = get_agent()
-        logger.info("✅ LangChain agent initialized successfully")
+        # Attempt to get the supervisor agent (Phase 3: multi-agent system)
+        test_agent = get_supervisor()
+        logger.info("✅ Supervisor agent initialized successfully")
         logger.info(f"   Agent name: {test_agent.name}")
         logger.info("   Model: GPT-4o-mini (OpenAI)")
         logger.info("   Memory: InMemorySaver (conversation history)")
+        logger.info("   Workers: Technical Support (more coming in Phase 4)")
     except RuntimeError as e:
         logger.error("")
         logger.error("=" * 70)
