@@ -91,7 +91,7 @@
   - [x] 5.6 Document in README how to enable branch protection rules on GitHub (requires GitHub UI, provide instructions) (branch: feat/5.6-branch-protection-docs)
 
 - [ ] 6.0 Validate Complete Setup End-to-End
-  - [ ] 6.1 Create virtual environment for backend and install all dependencies from requirements.txt
+  - [x] 6.1 Create virtual environment for backend and install all dependencies from requirements.txt (branch: feat/6.1-backend-venv-setup)
   - [ ] 6.2 Verify backend runs without errors using `uvicorn backend.main:app --reload`
   - [ ] 6.3 Test backend /health endpoint returns successful response
   - [ ] 6.4 Install frontend dependencies using `pnpm install`
