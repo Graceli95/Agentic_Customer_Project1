@@ -12,6 +12,7 @@ Last Updated: November 3, 2025
 """
 
 from langchain.agents import create_agent
+from langchain.tools import tool
 import os
 import logging
 
@@ -159,3 +160,45 @@ def get_technical_agent():
             "Check that OPENAI_API_KEY is set."
         )
     return technical_agent
+
+
+# Tool Wrapper for Supervisor Agent
+@tool
+def technical_support_tool(query: str) -> str:
+    """Handle technical support questions including errors, bugs, crashes, and troubleshooting.
+
+    Use this tool when the user has:
+    - Error messages or error codes (500, 404, 403, etc.)
+    - Software crashes, freezes, or bugs
+    - Installation or setup problems
+    - Technical configuration issues
+    - Performance or slowness problems
+    - Login or authentication errors
+    - Feature malfunctions or unexpected behavior
+    - Questions starting with "How do I..." about technical features
+    - Troubleshooting requests
+
+    Args:
+        query: The user's technical question or problem description
+
+    Returns:
+        str: Complete technical support response with troubleshooting steps
+
+    Example:
+        >>> response = technical_support_tool("I'm getting Error 500 when logging in")
+        >>> print(response)
+    """
+    logger.info(f"Technical support tool called with query: {query[:50]}...")
+
+    # Get the technical agent
+    agent = get_technical_agent()
+
+    # Invoke the agent with the query
+    result = agent.invoke({"messages": [{"role": "user", "content": query}]})
+
+    # Extract the response from the last message
+    response = result["messages"][-1].content
+
+    logger.info(f"Technical support tool returning response: {response[:50]}...")
+
+    return response
