@@ -1,0 +1,65 @@
+# Pre-commit hooks configuration
+# Install with: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+repos:
+  # Backend Python checks
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        name: Ruff Linter (Python)
+        args: [--fix]
+        files: ^backend/
+      - id: ruff-format
+        name: Ruff Formatter (Python)
+        files: ^backend/
+
+  # Frontend TypeScript/JavaScript checks
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint (Frontend)
+        entry: bash -c 'cd frontend && npx eslint . --ext .ts,.tsx --max-warnings=0'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+
+      - id: typescript
+        name: TypeScript Check (Frontend)
+        entry: bash -c 'cd frontend && npx tsc --noEmit'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+
+  # Backend Python tests
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Pytest (Backend)
+        entry: bash -c 'cd backend && source venv/bin/activate && pytest tests/ -v --tb=short'
+        language: system
+        files: ^backend/.*\.py$
+        pass_filenames: false
+
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        name: Trim Trailing Whitespace
+      - id: end-of-file-fixer
+        name: Fix End of Files
+      - id: check-yaml
+        name: Check YAML Syntax
+      - id: check-json
+        name: Check JSON Syntax
+      - id: check-added-large-files
+        name: Check for Large Files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
+        name: Check for Merge Conflicts
+      - id: mixed-line-ending
+        name: Check Mixed Line Endings
+        args: ['--fix=lf']
+

@@ -38,6 +38,7 @@ try:
         AuthenticationError,
         APITimeoutError,
     )
+
     OPENAI_AVAILABLE = True
 except ImportError:
     # If OpenAI is not installed, disable specific error handling
@@ -72,59 +73,62 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     """
     Request model for chat endpoint.
-    
+
     Validates incoming chat requests with message content and session management.
     """
+
     message: str = Field(
         ...,
         min_length=1,
         max_length=2000,
         description="User's message to the AI assistant",
-        examples=["Hello, I need help with my account"]
+        examples=["Hello, I need help with my account"],
     )
     session_id: str = Field(
         ...,
         description="UUID v4 session identifier for conversation continuity",
-        examples=["550e8400-e29b-41d4-a716-446655440000"]
+        examples=["550e8400-e29b-41d4-a716-446655440000"],
     )
-    
+
     @field_validator("session_id")
     @classmethod
     def validate_session_id(cls, v: str) -> str:
         """
         Validate that session_id is a valid UUID v4 format.
-        
+
         Args:
             v: The session_id string to validate
-            
+
         Returns:
             str: The validated session_id
-            
+
         Raises:
             ValueError: If session_id is not a valid UUID v4
         """
         # UUID v4 pattern: 8-4-4-4-12 hexadecimal characters
-        uuid_pattern = r'^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$'
-        
+        uuid_pattern = (
+            r"^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$"
+        )
+
         if not re.match(uuid_pattern, v.lower()):
             raise ValueError(
                 "session_id must be a valid UUID v4 format "
                 "(e.g., '550e8400-e29b-41d4-a716-446655440000')"
             )
-        
+
         return v.lower()  # Normalize to lowercase
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
                     "message": "Hello, I need help with my account",
-                    "session_id": "550e8400-e29b-41d4-a716-446655440000"
+                    "session_id": "550e8400-e29b-41d4-a716-446655440000",
                 },
                 {
                     "message": "What are your pricing plans?",
-                    "session_id": "123e4567-e89b-12d3-a456-426614174000"
-                }
+                    "session_id": "123e4567-e89b-12d3-a456-426614174000",
+                },
             ]
         }
     }
@@ -133,26 +137,29 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     """
     Response model for chat endpoint.
-    
+
     Returns the AI assistant's response along with metadata.
     """
+
     response: str = Field(
         ...,
         description="AI assistant's response to the user's message",
-        examples=["I'd be happy to help you with your account. What specific issue are you experiencing?"]
+        examples=[
+            "I'd be happy to help you with your account. What specific issue are you experiencing?"
+        ],
     )
     session_id: str = Field(
         ...,
         description="Echo back the session_id for confirmation",
-        examples=["550e8400-e29b-41d4-a716-446655440000"]
+        examples=["550e8400-e29b-41d4-a716-446655440000"],
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
                     "response": "I'd be happy to help you with your account. What specific issue are you experiencing?",
-                    "session_id": "550e8400-e29b-41d4-a716-446655440000"
+                    "session_id": "550e8400-e29b-41d4-a716-446655440000",
                 }
             ]
         }
@@ -162,32 +169,33 @@ class ChatResponse(BaseModel):
 class ErrorResponse(BaseModel):
     """
     Error response model for consistent error handling.
-    
+
     Used when requests fail validation or processing.
     """
+
     error: str = Field(
         ...,
         description="User-friendly error message",
-        examples=["Invalid session ID format"]
+        examples=["Invalid session ID format"],
     )
     detail: str = Field(
         ...,
         description="Technical details about the error",
-        examples=["session_id must be a valid UUID v4 format"]
+        examples=["session_id must be a valid UUID v4 format"],
     )
     session_id: str | None = Field(
         None,
         description="Session ID if available",
-        examples=["550e8400-e29b-41d4-a716-446655440000"]
+        examples=["550e8400-e29b-41d4-a716-446655440000"],
     )
-    
+
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
                     "error": "Invalid request",
                     "detail": "session_id must be a valid UUID v4 format",
-                    "session_id": None
+                    "session_id": None,
                 }
             ]
         }
@@ -241,30 +249,34 @@ async def root():
 # ============================================================================
 
 
-@app.post("/chat", response_model=ChatResponse, responses={
-    400: {"model": ErrorResponse, "description": "Bad Request - Invalid input"},
-    500: {"model": ErrorResponse, "description": "Internal Server Error"},
-})
+@app.post(
+    "/chat",
+    response_model=ChatResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Bad Request - Invalid input"},
+        500: {"model": ErrorResponse, "description": "Internal Server Error"},
+    },
+)
 async def chat_endpoint(request: ChatRequest):
     """
     Process user messages through the LangChain customer service agent.
-    
+
     This endpoint:
     - Validates the incoming message and session ID
     - Invokes the LangChain agent with conversation memory
     - Maintains conversation history per session (thread_id)
     - Returns the AI assistant's response
-    
+
     Args:
         request: ChatRequest containing message and session_id
-        
+
     Returns:
         ChatResponse: AI assistant's response with session confirmation
-        
+
     Raises:
         HTTPException 400: Invalid session ID format
         HTTPException 500: Agent initialization error or LLM API error
-        
+
     Example:
         Request:
         ```json
@@ -273,7 +285,7 @@ async def chat_endpoint(request: ChatRequest):
             "session_id": "550e8400-e29b-41d4-a716-446655440000"
         }
         ```
-        
+
         Response:
         ```json
         {
@@ -285,7 +297,7 @@ async def chat_endpoint(request: ChatRequest):
     try:
         logger.info(f"Received chat request for session: {request.session_id}")
         logger.debug(f"Message: {request.message[:50]}...")  # Log first 50 chars
-        
+
         # Get the LangChain agent
         # This may raise RuntimeError if agent isn't initialized (missing API key)
         try:
@@ -297,14 +309,14 @@ async def chat_endpoint(request: ChatRequest):
                 detail={
                     "error": "Service configuration error",
                     "detail": str(e),
-                    "session_id": request.session_id
-                }
+                    "session_id": request.session_id,
+                },
             )
-        
+
         # Create configuration with thread_id for conversation memory
         # This enables the agent to maintain context across multiple messages
         config = {"configurable": {"thread_id": request.session_id}}
-        
+
         # Invoke the LangChain agent
         # The agent will:
         # 1. Load conversation history for this thread_id
@@ -312,29 +324,25 @@ async def chat_endpoint(request: ChatRequest):
         # 3. Generate a response using GPT-4o-mini
         # 4. Save the updated conversation to memory
         logger.info(f"Invoking agent for session: {request.session_id}")
-        
+
         result = agent.invoke(
-            {"messages": [{"role": "user", "content": request.message}]},
-            config
+            {"messages": [{"role": "user", "content": request.message}]}, config
         )
-        
+
         # Extract the agent's response from the result
         # The last message in the conversation is the agent's response
         response_text = result["messages"][-1].content
-        
+
         logger.info(f"Agent response generated for session: {request.session_id}")
         logger.debug(f"Response: {response_text[:50]}...")  # Log first 50 chars
-        
+
         # Return the response with session confirmation
-        return ChatResponse(
-            response=response_text,
-            session_id=request.session_id
-        )
-        
+        return ChatResponse(response=response_text, session_id=request.session_id)
+
     except HTTPException:
         # Re-raise HTTPExceptions (validation errors, agent init errors)
         raise
-    
+
     except ValidationError as e:
         # Handle Pydantic validation errors
         logger.warning(f"Validation error for session {request.session_id}: {e}")
@@ -343,14 +351,14 @@ async def chat_endpoint(request: ChatRequest):
             detail={
                 "error": "Invalid request format",
                 "detail": str(e),
-                "session_id": request.session_id
-            }
+                "session_id": request.session_id,
+            },
         )
-        
+
     except Exception as e:
         # OpenAI-specific error handling
         # Check error type and handle accordingly
-        
+
         if OPENAI_AVAILABLE:
             if isinstance(e, AuthenticationError):
                 # Invalid API key
@@ -360,22 +368,24 @@ async def chat_endpoint(request: ChatRequest):
                     detail={
                         "error": "Service configuration error",
                         "detail": "API authentication failed. Please contact support.",
-                        "session_id": request.session_id
-                    }
+                        "session_id": request.session_id,
+                    },
                 )
-            
+
             elif isinstance(e, RateLimitError):
                 # Rate limit exceeded
-                logger.warning(f"OpenAI rate limit exceeded for session {request.session_id}: {e}")
+                logger.warning(
+                    f"OpenAI rate limit exceeded for session {request.session_id}: {e}"
+                )
                 raise HTTPException(
                     status_code=429,
                     detail={
                         "error": "Service temporarily unavailable",
                         "detail": "Too many requests. Please wait a moment and try again.",
-                        "session_id": request.session_id
-                    }
+                        "session_id": request.session_id,
+                    },
                 )
-            
+
             elif isinstance(e, APIConnectionError):
                 # Network connection issues
                 logger.error(f"OpenAI API connection error: {e}")
@@ -384,22 +394,24 @@ async def chat_endpoint(request: ChatRequest):
                     detail={
                         "error": "Service temporarily unavailable",
                         "detail": "Unable to connect to AI service. Please try again in a moment.",
-                        "session_id": request.session_id
-                    }
+                        "session_id": request.session_id,
+                    },
                 )
-            
+
             elif isinstance(e, APITimeoutError):
                 # Request timeout
-                logger.warning(f"OpenAI API timeout for session {request.session_id}: {e}")
+                logger.warning(
+                    f"OpenAI API timeout for session {request.session_id}: {e}"
+                )
                 raise HTTPException(
                     status_code=504,
                     detail={
                         "error": "Request timeout",
                         "detail": "The request took too long to process. Please try again.",
-                        "session_id": request.session_id
-                    }
+                        "session_id": request.session_id,
+                    },
                 )
-            
+
             elif isinstance(e, APIError):
                 # General OpenAI API errors
                 logger.error(f"OpenAI API error: {e}", exc_info=True)
@@ -408,20 +420,20 @@ async def chat_endpoint(request: ChatRequest):
                     detail={
                         "error": "AI service error",
                         "detail": "An error occurred while processing your request. Please try again.",
-                        "session_id": request.session_id
-                    }
+                        "session_id": request.session_id,
+                    },
                 )
         # Catch any other unexpected errors
         logger.error(f"Unexpected error in chat endpoint: {str(e)}", exc_info=True)
-        
+
         # Return a user-friendly error without exposing internal details
         raise HTTPException(
             status_code=500,
             detail={
                 "error": "Failed to process your message",
                 "detail": "An unexpected error occurred. Please try again in a moment.",
-                "session_id": request.session_id
-            }
+                "session_id": request.session_id,
+            },
         )
 
 
@@ -434,31 +446,29 @@ async def chat_endpoint(request: ChatRequest):
 async def startup_event():
     """
     Execute tasks on application startup.
-    
+
     Validates required configuration and initializes the LangChain agent.
     The application will fail to start if critical configuration is missing.
     """
     logger.info("=" * 70)
     logger.info("Starting Advanced Customer Service AI backend...")
     logger.info("=" * 70)
-    
+
     # Log environment information
-    environment = os.getenv('ENVIRONMENT', 'development')
+    environment = os.getenv("ENVIRONMENT", "development")
     logger.info(f"Environment: {environment}")
     logger.info(f"CORS origins: {cors_origins}")
     logger.info(f"Log level: {os.getenv('LOG_LEVEL', 'INFO')}")
-    
+
     # ========================================================================
     # Phase 2: Validate Required Configuration
     # ========================================================================
     logger.info("")
     logger.info("Validating configuration...")
-    
+
     # Check for required environment variables
-    required_vars = {
-        "OPENAI_API_KEY": "OpenAI API key for LLM integration"
-    }
-    
+    required_vars = {"OPENAI_API_KEY": "OpenAI API key for LLM integration"}
+
     missing_vars = []
     for var_name, description in required_vars.items():
         if not os.getenv(var_name):
@@ -472,27 +482,29 @@ async def startup_event():
             else:
                 masked_value = "****"
             logger.info(f"✅ {var_name}: {masked_value}")
-    
+
     # Check for optional but recommended environment variables
     optional_vars = {
         "LANGSMITH_API_KEY": "LangSmith tracing (recommended for debugging)",
         "LANGSMITH_TRACING": "Enable LangSmith tracing",
         "LANGSMITH_PROJECT": "LangSmith project name",
     }
-    
+
     logger.info("")
     logger.info("Optional configuration:")
     for var_name, description in optional_vars.items():
         if os.getenv(var_name):
             if "API_KEY" in var_name:
                 value = os.getenv(var_name)
-                masked_value = f"{value[:4]}...{value[-4:]}" if len(value) > 12 else "****"
+                masked_value = (
+                    f"{value[:4]}...{value[-4:]}" if len(value) > 12 else "****"
+                )
                 logger.info(f"✅ {var_name}: {masked_value}")
             else:
                 logger.info(f"✅ {var_name}: {os.getenv(var_name)}")
         else:
             logger.info(f"ℹ️  {var_name}: Not set ({description})")
-    
+
     # If any required variables are missing, fail startup
     if missing_vars:
         logger.error("")
@@ -509,16 +521,15 @@ async def startup_event():
         logger.error("3. Restart the application")
         logger.error("=" * 70)
         raise RuntimeError(
-            "Missing required environment variables. "
-            "See logs above for details."
+            "Missing required environment variables. See logs above for details."
         )
-    
+
     # ========================================================================
     # Phase 2: Initialize LangChain Agent
     # ========================================================================
     logger.info("")
     logger.info("Initializing LangChain agent...")
-    
+
     try:
         # Attempt to get the agent (this validates the configuration)
         test_agent = get_agent()
@@ -548,7 +559,7 @@ async def startup_event():
         logger.error(f"Error: {e}")
         logger.error("=" * 70)
         raise
-    
+
     # ========================================================================
     # Startup Complete
     # ========================================================================
