@@ -96,7 +96,7 @@
   - [x] 6.3 Test backend /health endpoint returns successful response (branch: feat/6.3-test-health-endpoint)
   - [x] 6.4 Install frontend dependencies using `pnpm install` (branch: feat/6.4-install-frontend-deps)
   - [x] 6.5 Verify frontend runs without errors using `pnpm dev` (branch: feat/6.5-verify-frontend-dev-server)
-  - [ ] 6.6 Open frontend in browser and verify placeholder page displays correctly
+  - [x] 6.6 Open frontend in browser and verify placeholder page displays correctly (branch: feat/6.6-verify-frontend-page)
   - [ ] 6.7 Run pytest in backend directory and verify test discovery and execution works
   - [ ] 6.8 Run linting on backend using `ruff check` and verify it passes
   - [ ] 6.9 Run linting on frontend using `pnpm lint` and verify it passes
