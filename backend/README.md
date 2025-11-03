@@ -4,46 +4,62 @@ FastAPI backend for the multi-agent customer service AI system powered by LangCh
 
 ## Overview
 
-This backend provides REST API endpoints for an intelligent customer service system that uses multiple specialized AI agents to handle:
-- Technical support inquiries
-- Billing and payment questions
-- Compliance and policy information
-- General customer service requests
+This backend provides REST API endpoints for an intelligent customer service system that uses AI agents powered by LangChain v1.0+ and OpenAI's GPT-4o-mini.
+
+**Current Phase: Phase 2 - Simple Agent Foundation** ✅
+
+Phase 2 implements a single conversational agent with memory management, providing a foundation for more complex multi-agent architectures in future phases.
+
+**Key Features:**
+- 🤖 Conversational AI agent with GPT-4o-mini
+- 💾 Session-based conversation memory (InMemorySaver)
+- 🔄 RESTful API with FastAPI
+- ✅ Comprehensive test coverage (37 tests passing)
+- 📊 LangSmith tracing support for debugging
 
 **Key Technologies:**
 - **FastAPI** - Modern, high-performance web framework
-- **LangChain v1.0+** - LLM application framework
-- **LangGraph** - Agent orchestration and workflow management
-- **ChromaDB** - Vector database for document retrieval
+- **LangChain v1.0+** - LLM application framework (using `create_agent`)
+- **LangGraph** - Agent orchestration with checkpointers
+- **OpenAI GPT-4o-mini** - Language model
 - **Pydantic** - Data validation and settings management
-- **Pytest** - Testing framework
+- **Pytest** - Testing framework with 69% coverage
 
 ## Project Structure
 
 ```
 backend/
 ├── agents/                  # Agent modules
-│   ├── __init__.py
-│   └── workers/            # Specialized worker agents
+│   ├── __init__.py         # Exports get_agent()
+│   ├── simple_agent.py     # Phase 2: Customer service agent (✅)
+│   └── workers/            # Future: Specialized worker agents (Phase 3+)
 │       └── __init__.py
 ├── data/                   # Data and documents
 │   ├── __init__.py
-│   └── docs/              # Document storage
+│   └── docs/              # Future: Document storage (Phase 5+)
 │       ├── billing/       # Billing-related documents
 │       ├── compliance/    # Compliance documents
 │       └── technical/     # Technical documentation
 ├── tests/                  # Test suite
 │   ├── __init__.py
-│   └── test_main.py       # API endpoint tests
+│   ├── test_main.py       # API endpoint tests (27 tests ✅)
+│   └── test_agent.py      # Agent unit tests (10 tests ✅)
 ├── utils/                  # Utility functions
 │   └── __init__.py
-├── main.py                 # FastAPI application entry point
+├── main.py                 # FastAPI application with /chat endpoint (✅)
+├── conftest.py             # Pytest configuration and fixtures
 ├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variable template
+├── .env.example           # Environment variable template (✅)
 ├── Dockerfile             # Container configuration
 ├── pytest.ini             # Pytest configuration
 └── README.md              # This file
 ```
+
+**Phase 2 Status:** ✅ Complete
+- Simple agent with conversation memory
+- /chat endpoint with session management
+- Comprehensive test suite
+- LangSmith tracing support
 
 ## Prerequisites
 
@@ -104,19 +120,43 @@ cp .env.example .env
 nano .env  # or use your preferred editor
 ```
 
-**Required Environment Variables:**
-- `OPENAI_API_KEY` - OpenAI API key for LLM access
-- `ENVIRONMENT` - Environment name (development/staging/production)
-- `LOG_LEVEL` - Logging level (DEBUG/INFO/WARNING/ERROR)
-- `CORS_ORIGINS` - Allowed CORS origins (comma-separated)
+**Required Environment Variables (Phase 2):**
+- `OPENAI_API_KEY` - **REQUIRED** - OpenAI API key for GPT-4o-mini
+  - Get your key at: https://platform.openai.com/api-keys
+  - Format: `sk-proj-...`
+  - Used by the customer service agent
 
 **Optional Environment Variables:**
-- `AWS_ACCESS_KEY_ID` - AWS credentials for Bedrock
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key
-- `AWS_DEFAULT_REGION` - AWS region
-- `LANGSMITH_API_KEY` - LangSmith tracing (recommended for debugging)
-- `LANGSMITH_TRACING` - Enable LangSmith tracing (true/false)
-- `LANGSMITH_PROJECT` - LangSmith project name
+- `LANGSMITH_TRACING` - Enable LangSmith tracing (`true`/`false`)
+  - **Highly recommended** for development and debugging
+  - View traces at: https://smith.langchain.com/
+- `LANGSMITH_API_KEY` - LangSmith API key (if tracing enabled)
+  - Get your key at: https://smith.langchain.com/settings
+  - Format: `lsv2_...`
+- `LANGSMITH_PROJECT` - LangSmith project name (default: `customer-service-phase2`)
+- `ENVIRONMENT` - Environment name (`development`/`staging`/`production`)
+- `LOG_LEVEL` - Logging level (`DEBUG`/`INFO`/`WARNING`/`ERROR`)
+
+**Example `.env` file for Phase 2:**
+```bash
+# OpenAI Configuration (REQUIRED)
+OPENAI_API_KEY=sk-proj-your-actual-key-here
+
+# LangSmith Configuration (OPTIONAL but recommended)
+LANGSMITH_TRACING=true
+LANGSMITH_API_KEY=lsv2_your-key-here
+LANGSMITH_PROJECT=customer-service-phase2
+
+# Application Configuration
+ENVIRONMENT=development
+LOG_LEVEL=INFO
+```
+
+**Future Phases (not needed for Phase 2):**
+- `AWS_ACCESS_KEY_ID` - AWS credentials for Bedrock (Phase 6)
+- `AWS_SECRET_ACCESS_KEY` - AWS secret key (Phase 6)
+- `AWS_DEFAULT_REGION` - AWS region (Phase 6)
+- `CORS_ORIGINS` - Allowed CORS origins (configured in code for Phase 2)
 
 ### 4. Verify Installation
 
@@ -263,7 +303,7 @@ docker-compose down
 
 ## API Documentation
 
-### Available Endpoints
+### Available Endpoints (Phase 2)
 
 #### Health Check
 ```
@@ -290,11 +330,123 @@ Returns API information and links to documentation.
 **Response:**
 ```json
 {
-  "message": "Welcome to Advanced Customer Service AI",
+  "message": "Customer Service API is running",
   "docs": "/docs",
   "health": "/health",
   "version": "1.0.0"
 }
+```
+
+#### Chat Endpoint (Phase 2) 🆕
+```
+POST /chat
+```
+Send a message to the AI customer service agent. The agent maintains conversation history based on the session ID.
+
+**Request Body:**
+```json
+{
+  "message": "Hello, how can you help me?",
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Parameters:**
+- `message` (string, required): User's message (1-2000 characters)
+- `session_id` (string, required): UUID v4 format session identifier
+
+**Success Response (200 OK):**
+```json
+{
+  "response": "Hello! I'm here to assist you with any questions or concerns you may have. How can I help you today?",
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Error Responses:**
+
+- **400 Bad Request** - Invalid session_id format
+```json
+{
+  "error": "Invalid session_id format",
+  "detail": "session_id must be a valid UUID v4",
+  "session_id": "invalid-uuid"
+}
+```
+
+- **422 Unprocessable Entity** - Validation error (missing fields, message too long)
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "message"],
+      "msg": "field required",
+      "type": "value_error.missing"
+    }
+  ]
+}
+```
+
+- **500 Internal Server Error** - OpenAI API error or agent failure
+```json
+{
+  "error": "Failed to process your message",
+  "detail": "OpenAI authentication error: Invalid API key",
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+- **503 Service Unavailable** - OpenAI API connection error
+```json
+{
+  "error": "Service temporarily unavailable",
+  "detail": "Could not connect to OpenAI API",
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Example Usage (curl):**
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "What services do you offer?",
+    "session_id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+**Example Usage (Python):**
+```python
+import requests
+
+response = requests.post(
+    "http://localhost:8000/chat",
+    json={
+        "message": "Hello, how are you?",
+        "session_id": "550e8400-e29b-41d4-a716-446655440000"
+    }
+)
+
+data = response.json()
+print(f"AI: {data['response']}")
+```
+
+**Conversation Memory:**
+The agent remembers the conversation history for each session_id. Use the same session_id for follow-up messages to maintain context.
+
+```python
+# First message
+response1 = requests.post("http://localhost:8000/chat", json={
+    "message": "My name is Alice",
+    "session_id": "abc-123"
+})
+
+# Second message - agent remembers "Alice"
+response2 = requests.post("http://localhost:8000/chat", json={
+    "message": "What is my name?",
+    "session_id": "abc-123"  # Same session_id
+})
+# Response: "Your name is Alice."
 ```
 
 #### Interactive Documentation
@@ -418,18 +570,52 @@ LOG_LEVEL=DEBUG
 uvicorn main:app --reload --log-level debug
 ```
 
-### LangSmith Tracing
+### LangSmith Tracing (Highly Recommended)
 
-Enable LangSmith for detailed agent execution traces:
+LangSmith provides detailed traces of agent execution, showing:
+- Every LLM call made by the agent
+- Input/output of each step
+- Token usage and costs
+- Latency for each operation
+- Error details with full stack traces
+
+**Setup:**
+
+1. Create account at https://smith.langchain.com/
+2. Get API key from Settings
+3. Add to `.env` file:
 
 ```bash
-# Add to .env file
 LANGSMITH_TRACING=true
-LANGSMITH_API_KEY=your_langsmith_key
-LANGSMITH_PROJECT=customer-service-ai
-
-# View traces at https://smith.langchain.com/
+LANGSMITH_API_KEY=lsv2_your_actual_key_here
+LANGSMITH_PROJECT=customer-service-phase2
 ```
+
+4. Restart backend server
+5. Make API calls to `/chat`
+6. View traces at: https://smith.langchain.com/
+
+**Example Trace Information:**
+```
+📊 Trace: POST /chat
+├── Agent Invocation
+│   ├── Model: gpt-4o-mini
+│   ├── Input: "Hello, how are you?"
+│   ├── Output: "Hello! I'm doing well..."
+│   ├── Tokens: 45 (15 input, 30 output)
+│   └── Latency: 1.2s
+└── Checkpointer: InMemorySaver
+    └── Session: 550e8400-e29b-41d4-a716-446655440000
+```
+
+**Benefits:**
+- ✅ Debug agent behavior step-by-step
+- ✅ Monitor token usage and costs
+- ✅ Identify performance bottlenecks
+- ✅ Analyze error patterns
+- ✅ Compare different prompts/models
+
+**No code changes needed** - just environment variables!
 
 ## Additional Resources
 
@@ -449,7 +635,29 @@ For questions or issues:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: November 2, 2025  
-**LangChain Version**: 1.0+
+## Phase 2 Completion Status
+
+**✅ Phase 2 Complete** - Simple Agent Foundation
+
+**What's Included:**
+- Single conversational agent with GPT-4o-mini
+- Session-based conversation memory (InMemorySaver)
+- RESTful `/chat` endpoint
+- Comprehensive test suite (37 tests passing, 69% coverage)
+- LangSmith tracing support
+- Error handling and validation
+
+**What's Next:**
+- **Phase 3**: Multi-agent architecture with supervisor pattern
+- **Phase 4**: Specialized worker agents (technical, billing, compliance)
+- **Phase 5**: RAG/CAG with document retrieval
+- **Phase 6**: AWS Bedrock integration and streaming
+
+---
+
+**Version**: 1.0.0 (Phase 2)  
+**Last Updated**: November 3, 2025  
+**LangChain Version**: 1.0+  
+**Test Coverage**: 69%  
+**Status**: ✅ Production Ready
 
