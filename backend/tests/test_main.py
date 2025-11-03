@@ -20,6 +20,7 @@ client = TestClient(app)
 # Health Check Endpoint Tests
 # ============================================================================
 
+
 @pytest.mark.unit
 def test_health_check_returns_200():
     """Test that health check endpoint returns 200 OK."""
@@ -32,7 +33,7 @@ def test_health_check_response_structure():
     """Test that health check returns expected JSON structure."""
     response = client.get("/health")
     data = response.json()
-    
+
     # Verify all expected fields are present
     assert "status" in data
     assert "service" in data
@@ -45,7 +46,7 @@ def test_health_check_status_healthy():
     """Test that health check status is 'healthy'."""
     response = client.get("/health")
     data = response.json()
-    
+
     assert data["status"] == "healthy"
 
 
@@ -54,7 +55,7 @@ def test_health_check_service_name():
     """Test that health check returns correct service name."""
     response = client.get("/health")
     data = response.json()
-    
+
     assert data["service"] == "customer-service-ai"
 
 
@@ -63,13 +64,14 @@ def test_health_check_version():
     """Test that health check returns version information."""
     response = client.get("/health")
     data = response.json()
-    
+
     assert data["version"] == "1.0.0"
 
 
 # ============================================================================
 # Root Endpoint Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 def test_root_endpoint_returns_200():
@@ -83,7 +85,7 @@ def test_root_endpoint_response_structure():
     """Test that root endpoint returns expected JSON structure."""
     response = client.get("/")
     data = response.json()
-    
+
     # Verify all expected fields are present
     assert "message" in data
     assert "docs" in data
@@ -96,7 +98,7 @@ def test_root_endpoint_message():
     """Test that root endpoint returns welcome message."""
     response = client.get("/")
     data = response.json()
-    
+
     assert "Customer Service AI" in data["message"]
 
 
@@ -105,7 +107,7 @@ def test_root_endpoint_docs_path():
     """Test that root endpoint provides documentation path."""
     response = client.get("/")
     data = response.json()
-    
+
     assert data["docs"] == "/docs"
 
 
@@ -114,13 +116,14 @@ def test_root_endpoint_health_path():
     """Test that root endpoint provides health check path."""
     response = client.get("/")
     data = response.json()
-    
+
     assert data["health"] == "/health"
 
 
 # ============================================================================
 # API Documentation Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 def test_openapi_docs_accessible():
@@ -147,11 +150,12 @@ def test_openapi_json_accessible():
 # CORS Configuration Tests
 # ============================================================================
 
+
 @pytest.mark.unit
 def test_cors_headers_present():
     """Test that CORS headers are present in response."""
     response = client.get("/health", headers={"Origin": "http://localhost:3000"})
-    
+
     # CORS headers should be present
     assert "access-control-allow-origin" in response.headers
 
@@ -159,6 +163,7 @@ def test_cors_headers_present():
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 def test_nonexistent_endpoint_returns_404():
@@ -172,4 +177,3 @@ def test_method_not_allowed_returns_405():
     """Test that using wrong HTTP method returns 405."""
     response = client.post("/health")
     assert response.status_code == 405
-
