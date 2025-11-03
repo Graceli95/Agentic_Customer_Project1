@@ -72,12 +72,13 @@
   - Tool now accessible from agents.workers package
 
 ### 3.0 Backend: Integration and API Updates
-- [ ] 3.1 Update `backend/main.py` to use supervisor agent
-  - Change from `get_agent()` to `get_supervisor()`
-  - Update imports
-  - Keep same /chat endpoint logic (no other changes needed)
-  - Test that API still works
-  - Branch: `feat/phase3-3.1-integrate-supervisor`
+- [x] 3.1 Update `backend/main.py` to use supervisor agent (branch: feat/phase3-3.1-integrate-supervisor)
+  - Changed import from `get_agent()` to `get_supervisor()`
+  - Updated /chat endpoint to use supervisor (line 304)
+  - Updated startup validation to use supervisor (line 535)
+  - Added logging about Technical Support worker
+  - Fixed import to use relative import (agents vs backend.agents)
+  - Same /chat endpoint logic maintained (fully compatible)
 
 - [ ] 3.2 Add routing logging to track agent decisions
   - Log when supervisor routes to technical worker
