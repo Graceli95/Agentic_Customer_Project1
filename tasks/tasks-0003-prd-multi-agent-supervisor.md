@@ -43,11 +43,11 @@
   - Export `create_supervisor_agent()` function
   - Fixed import structure in `agents/__init__.py` for consistency
 
-- [ ] 1.2 Update `backend/agents/__init__.py` to export supervisor
+- [x] 1.2 Update `backend/agents/__init__.py` to export supervisor (branch: feat/phase3-1.2-export-supervisor)
   - Add import for supervisor agent
   - Export `get_supervisor()` function (similar to Phase 2's `get_agent()`)
-  - Initialize supervisor at module level
-  - Branch: `feat/phase3-1.2-export-supervisor`
+  - Export `create_supervisor_agent()` function
+  - Updated package docstring to reflect Phase 3 completion
 
 ### 2.0 Backend: Technical Support Worker
 - [ ] 2.1 Create `backend/agents/workers/technical_support.py` with technical worker
