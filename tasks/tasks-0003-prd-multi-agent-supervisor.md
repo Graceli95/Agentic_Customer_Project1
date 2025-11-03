@@ -49,7 +49,7 @@
   - Export `create_supervisor_agent()` function
   - Updated package docstring to reflect Phase 3 completion
 
-### 2.0 Backend: Technical Support Worker
+### 2.0 Backend: Technical Support Worker ✅
 - [x] 2.1 Create `backend/agents/workers/technical_support.py` with technical worker (branch: feat/phase3-2.1-create-technical-worker)
   - Create technical support agent using `create_agent()`
   - Define technical specialist system prompt with troubleshooting expertise
@@ -65,10 +65,11 @@
   - Added logging for debugging tool calls
   - Export `technical_support_tool`
 
-- [ ] 2.3 Update `backend/agents/workers/__init__.py` to export worker and tool
-  - Import technical support agent and tool
-  - Export both for use by supervisor
-  - Branch: `feat/phase3-2.3-export-technical-worker`
+- [x] 2.3 Update `backend/agents/workers/__init__.py` to export worker and tool (branch: feat/phase3-2.3-export-technical-worker)
+  - Import technical support agent and tool from technical_support module
+  - Export `create_technical_support_agent`, `get_technical_agent`, `technical_support_tool`
+  - Updated package docstring (Phase 3 ✅, Future Phase 4+)
+  - Tool now accessible from agents.workers package
 
 ### 3.0 Backend: Integration and API Updates
 - [ ] 3.1 Update `backend/main.py` to use supervisor agent
