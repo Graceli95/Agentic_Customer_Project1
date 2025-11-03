@@ -11,14 +11,18 @@ Guidelines for managing task lists in markdown files to track progress on comple
 - **One sub-task at a time:** Do **NOT** start the next sub-task until you ask the user for permission and they say "yes" or "y".
 
 - **Sub-task branches only (no PRs):**  
-  - Each **sub-task** has its **own feature branch**: `feat/<task-number>-<subtask-name>`.
-    - Example: `feat/1.2-user-login-api`
+  - Each **sub-task** has its **own feature branch**: `feat/phase<N>-<task-number>-<subtask-name>`.
+    - Where `<N>` is the phase number from the PRD (e.g., phase2, phase3)
+    - Examples: 
+      - Phase 2: `feat/phase2-1.2-create-simple-agent`
+      - Phase 3: `feat/phase3-1.1-create-supervisor`
+    - This makes it immediately clear which phase the work belongs to on GitHub
   - **Parent tasks** in Markdown are grouping only — no branches for them.  
   - Always branch from the **latest `main`**:
     ```bash
     git checkout main
     git pull origin main
-    git checkout -b feat/<task-number>-<subtask-name>
+    git checkout -b feat/phase<N>-<task-number>-<subtask-name>
     ```
 
 - **Completion protocol (per sub-task):**  
@@ -55,7 +59,7 @@ Guidelines for managing task lists in markdown files to track progress on comple
      -m "- Added POST /api/auth/login route" \
      -m "- Implemented JWT token generation" \
      -m "- Added password hashing with bcrypt" \
-     -m "Related to Task 1.2 in PRD-0001-user-auth"
+     -m "Related to Task 1.2 in PRD-0001 (Phase 1)"
      ```
 
   5. **Push the feature branch** (required for backup and history):
@@ -67,7 +71,7 @@ Guidelines for managing task lists in markdown files to track progress on comple
      ```bash
      git checkout main
      git pull origin main
-     git merge --no-ff feat/<task-number>-<subtask-name>
+     git merge --no-ff feat/phase<N>-<task-number>-<subtask-name>
      ```
      
      **If merge conflicts occur:**
@@ -110,7 +114,7 @@ Guidelines for managing task lists in markdown files to track progress on comple
    - Add new tasks as they emerge.
    - Optionally include the branch name next to completed sub-tasks:
      ```
-     [x] 1.2 Add user login API  (branch: feat/1.2-user-login-api)
+     [x] 1.2 Add user login API  (branch: feat/phase2-1.2-user-login-api)
      ```
 
 2. **Maintain the "Relevant Files" section:**
@@ -150,7 +154,7 @@ When working with task lists, the AI must:
 
 ✅ **Summary**
 
-- Every sub-task = a **feature branch** off `main` (format: `feat/<task-number>-<subtask-name>`)
+- Every sub-task = a **feature branch** off `main` (format: `feat/phase<N>-<task-number>-<subtask-name>`)
 - **ONE SUB-TASK AT A TIME** — Stop and get approval after each merge
 - **No PRs**: merge locally with `git merge --no-ff`
 - Test if possible; if not, **manually verify** behavior before pushing

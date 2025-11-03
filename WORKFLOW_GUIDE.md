@@ -163,15 +163,19 @@ Let's start executing @tasks-0002-prd-simple-agent-foundation.md following @proc
    - PAUSE for approval
 
 2. **Branch Naming**
-   - Format: `feat/<task-number>-<subtask-name>`
-   - Example: `feat/2.1-integrate-langchain`
+   - Format: `feat/phase<N>-<task-number>-<subtask-name>`
+   - Where `<N>` is the phase number (e.g., phase2, phase3)
+   - Examples:
+     - Phase 2: `feat/phase2-1.2-create-simple-agent`
+     - Phase 2: `feat/phase2-2.1-create-pydantic-models`
+     - Phase 3: `feat/phase3-1.1-create-supervisor`
 
 3. **Commit Messages**
    ```bash
    git commit -m "feat: <short summary>" \
    -m "- Key change 1" \
    -m "- Key change 2" \
-   -m "Related to Task X.Y in PRD-NNNN"
+   -m "Related to Task X.Y in PRD-NNNN (Phase N)"
    ```
 
 4. **Completion Protocol**
@@ -202,6 +206,57 @@ Please ask clarifying questions before generating the PRD.
 ```
 
 **Remember**: Switch to **agent mode** first! 🚀
+
+---
+
+## 📝 Naming Conventions
+
+### PRD Files
+- **Format**: `[nnnn]-prd-[feature-name].md`
+- **Location**: `/tasks/`
+- **Example**: `0002-prd-simple-agent-foundation.md`
+- **Rule**: Sequential numbering (0001, 0002, 0003...) corresponds to phase number
+
+### Task List Files
+- **Format**: `tasks-[nnnn]-prd-[feature-name].md`
+- **Location**: `/tasks/`
+- **Example**: `tasks-0002-prd-simple-agent-foundation.md`
+- **Rule**: Must match corresponding PRD filename with `tasks-` prefix
+
+### Git Branches
+- **Format**: `feat/phase<N>-<task-number>-<subtask-name>`
+- **Examples**:
+  - `feat/phase2-1.1-verify-langchain-packages`
+  - `feat/phase2-2.1-create-pydantic-models`
+  - `feat/phase3-1.1-create-supervisor-agent`
+- **Benefits**:
+  - Immediately identifies which phase
+  - Easy to filter branches on GitHub
+  - Clear context for code reviews
+  - Works across multiple projects
+
+### Commit Messages
+- **Format**: Conventional commits with phase reference
+- **Example**:
+  ```bash
+  git commit -m "feat: implement user authentication endpoint" \
+  -m "- Added POST /api/auth/login route" \
+  -m "- Implemented JWT token generation" \
+  -m "Related to Task 2.1 in PRD-0002 (Phase 2)"
+  ```
+
+---
+
+## 🗺️ Phase-to-Number Mapping
+
+| Phase | PRD # | PRD File | Branch Prefix | Status |
+|-------|-------|----------|---------------|--------|
+| Phase 1: Project Skeleton | 0001 | `0001-prd-project-setup.md` | `feat/phase1-*` | ✅ Complete |
+| Phase 2: Simple Agent | 0002 | `0002-prd-simple-agent-foundation.md` | `feat/phase2-*` | 🔄 In Progress |
+| Phase 3: Supervisor + Worker | 0003 | `0003-prd-supervisor-first-worker.md` | `feat/phase3-*` | 📋 Planned |
+| Phase 4: Remaining Workers | 0004 | `0004-prd-remaining-workers.md` | `feat/phase4-*` | 📋 Planned |
+| Phase 5: RAG/CAG | 0005 | `0005-prd-rag-cag-implementation.md` | `feat/phase5-*` | 📋 Planned |
+| Phase 6: Multi-Provider | 0006 | `0006-prd-polish-multi-provider.md` | `feat/phase6-*` | 📋 Planned |
 
 ---
 
