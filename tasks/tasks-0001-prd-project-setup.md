@@ -92,7 +92,7 @@
 
 - [ ] 6.0 Validate Complete Setup End-to-End
   - [x] 6.1 Create virtual environment for backend and install all dependencies from requirements.txt (branch: feat/6.1-backend-venv-setup)
-  - [ ] 6.2 Verify backend runs without errors using `uvicorn backend.main:app --reload`
+  - [x] 6.2 Verify backend runs without errors using `uvicorn backend.main:app --reload` (branch: feat/6.2-verify-backend-runs)
   - [ ] 6.3 Test backend /health endpoint returns successful response
   - [ ] 6.4 Install frontend dependencies using `pnpm install`
   - [ ] 6.5 Verify frontend runs without errors using `pnpm dev`
