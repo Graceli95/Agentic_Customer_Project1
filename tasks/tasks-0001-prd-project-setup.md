@@ -90,7 +90,7 @@
   - [x] 5.5 Create `.github/PULL_REQUEST_TEMPLATE.md` with checklist and sections for description, testing, and related issues (branch: feat/5.5-pr-template)
   - [x] 5.6 Document in README how to enable branch protection rules on GitHub (requires GitHub UI, provide instructions) (branch: feat/5.6-branch-protection-docs)
 
-- [ ] 6.0 Validate Complete Setup End-to-End
+- [x] 6.0 Validate Complete Setup End-to-End
   - [x] 6.1 Create virtual environment for backend and install all dependencies from requirements.txt (branch: feat/6.1-backend-venv-setup)
   - [x] 6.2 Verify backend runs without errors using `uvicorn backend.main:app --reload` (branch: feat/6.2-verify-backend-runs)
   - [x] 6.3 Test backend /health endpoint returns successful response (branch: feat/6.3-test-health-endpoint)
@@ -102,5 +102,5 @@
   - [x] 6.9 Run linting on frontend using `pnpm lint` and verify it passes (branch: feat/6.9-verify-frontend-linting)
   - [x] 6.10 Test complete developer setup flow following README instructions (branch: feat/6.10-test-dev-setup-flow)
   - [x] 6.11 Create `docker-compose.yml` at root with backend service configuration (branch: feat/6.11-create-docker-compose)
-  - [ ] 6.12 Test backend starts successfully using `docker-compose up`
+  - [x] 6.12 Test backend starts successfully using `docker-compose up` (branch: feat/6.12-test-docker-compose)
 
