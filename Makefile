@@ -67,6 +67,8 @@ lint: lint-backend lint-frontend
 lint-backend:
 	@echo "🔍 Running Ruff linter..."
 	cd backend && source venv/bin/activate && ruff check .
+	@echo "🔍 Running Ruff formatter check..."
+	cd backend && source venv/bin/activate && ruff format --check .
 
 lint-frontend:
 	@echo "🔍 Running ESLint..."

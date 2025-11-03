@@ -29,9 +29,20 @@ echo "----------------------------------------------------------------------"
 echo "1️⃣  Running Ruff linter..."
 cd backend
 if source venv/bin/activate && ruff check .; then
-    echo -e "${GREEN}✅ Ruff: PASSED${NC}"
+    echo -e "${GREEN}✅ Ruff Linter: PASSED${NC}"
 else
-    echo -e "${RED}❌ Ruff: FAILED${NC}"
+    echo -e "${RED}❌ Ruff Linter: FAILED${NC}"
+    FAILED=1
+fi
+echo ""
+
+# 1b. Ruff Formatter Check (matches CI)
+echo "1️⃣b Running Ruff formatter check..."
+if source venv/bin/activate && ruff format --check .; then
+    echo -e "${GREEN}✅ Ruff Formatter: PASSED${NC}"
+else
+    echo -e "${RED}❌ Ruff Formatter: FAILED${NC}"
+    echo -e "${YELLOW}💡 Run 'make format' to fix formatting issues${NC}"
     FAILED=1
 fi
 echo ""
