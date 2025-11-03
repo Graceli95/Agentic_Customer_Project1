@@ -10,7 +10,7 @@ Last Updated: November 2, 2025
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ValidationError
 from dotenv import load_dotenv
 import os
 import logging
@@ -28,6 +28,21 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# Import OpenAI for error handling
+try:
+    from openai import (
+        APIError,
+        APIConnectionError,
+        RateLimitError,
+        AuthenticationError,
+        APITimeoutError,
+    )
+    OPENAI_AVAILABLE = True
+except ImportError:
+    # If OpenAI is not installed, disable specific error handling
+    OPENAI_AVAILABLE = False
+    logger.warning("OpenAI package not found - using generic error handling")
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -319,9 +334,85 @@ async def chat_endpoint(request: ChatRequest):
     except HTTPException:
         # Re-raise HTTPExceptions (validation errors, agent init errors)
         raise
+    
+    except ValidationError as e:
+        # Handle Pydantic validation errors
+        logger.warning(f"Validation error for session {request.session_id}: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "Invalid request format",
+                "detail": str(e),
+                "session_id": request.session_id
+            }
+        )
         
     except Exception as e:
-        # Catch any unexpected errors (OpenAI API errors, network issues, etc.)
+        # OpenAI-specific error handling
+        # Check error type and handle accordingly
+        error_type = type(e).__name__
+        
+        if OPENAI_AVAILABLE:
+            if isinstance(e, AuthenticationError):
+                # Invalid API key
+                logger.error(f"OpenAI authentication error: {e}")
+                raise HTTPException(
+                    status_code=500,
+                    detail={
+                        "error": "Service configuration error",
+                        "detail": "API authentication failed. Please contact support.",
+                        "session_id": request.session_id
+                    }
+                )
+            
+            elif isinstance(e, RateLimitError):
+                # Rate limit exceeded
+                logger.warning(f"OpenAI rate limit exceeded for session {request.session_id}: {e}")
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": "Service temporarily unavailable",
+                        "detail": "Too many requests. Please wait a moment and try again.",
+                        "session_id": request.session_id
+                    }
+                )
+            
+            elif isinstance(e, APIConnectionError):
+                # Network connection issues
+                logger.error(f"OpenAI API connection error: {e}")
+                raise HTTPException(
+                    status_code=503,
+                    detail={
+                        "error": "Service temporarily unavailable",
+                        "detail": "Unable to connect to AI service. Please try again in a moment.",
+                        "session_id": request.session_id
+                    }
+                )
+            
+            elif isinstance(e, APITimeoutError):
+                # Request timeout
+                logger.warning(f"OpenAI API timeout for session {request.session_id}: {e}")
+                raise HTTPException(
+                    status_code=504,
+                    detail={
+                        "error": "Request timeout",
+                        "detail": "The request took too long to process. Please try again.",
+                        "session_id": request.session_id
+                    }
+                )
+            
+            elif isinstance(e, APIError):
+                # General OpenAI API errors
+                logger.error(f"OpenAI API error: {e}", exc_info=True)
+                raise HTTPException(
+                    status_code=500,
+                    detail={
+                        "error": "AI service error",
+                        "detail": "An error occurred while processing your request. Please try again.",
+                        "session_id": request.session_id
+                    }
+                )
+        # Catch any other unexpected errors
         logger.error(f"Unexpected error in chat endpoint: {str(e)}", exc_info=True)
         
         # Return a user-friendly error without exposing internal details
