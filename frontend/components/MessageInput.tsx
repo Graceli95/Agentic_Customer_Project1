@@ -7,7 +7,7 @@
  * Related to Task 4.2 in PRD-0002 (Phase 2: Simple Agent Foundation)
  */
 
-import { useState, FormEvent, KeyboardEvent } from 'react';
+import { useState, type FormEvent, type KeyboardEvent } from 'react';
 
 interface MessageInputProps {
   /** Callback function when user submits a message */
