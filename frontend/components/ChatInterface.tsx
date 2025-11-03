@@ -13,7 +13,7 @@
 import { useState } from 'react';
 import MessageList, { Message } from './MessageList';
 import MessageInput from './MessageInput';
-import { sendChatMessage, ApiError, formatErrorMessage } from '@/lib/api';
+import { sendChatMessage, formatErrorMessage } from '@/lib/api';
 
 interface ChatInterfaceProps {
   /** Session ID for conversation continuity */
