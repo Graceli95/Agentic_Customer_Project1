@@ -50,12 +50,12 @@
   - Updated package docstring to reflect Phase 3 completion
 
 ### 2.0 Backend: Technical Support Worker
-- [ ] 2.1 Create `backend/agents/workers/technical_support.py` with technical worker
+- [x] 2.1 Create `backend/agents/workers/technical_support.py` with technical worker (branch: feat/phase3-2.1-create-technical-worker)
   - Create technical support agent using `create_agent()`
-  - Define technical specialist system prompt
+  - Define technical specialist system prompt with troubleshooting expertise
   - Emphasize "include all results in final response" for supervisor
-  - Export `create_technical_support_agent()` function
-  - Branch: `feat/phase3-2.1-create-technical-worker`
+  - Export `create_technical_support_agent()` and `get_technical_agent()` functions
+  - No checkpointer (supervisor maintains context)
 
 - [ ] 2.2 Wrap technical worker as tool for supervisor
   - Use `@tool` decorator to wrap agent
