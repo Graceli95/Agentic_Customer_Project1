@@ -12,7 +12,7 @@
 
 type ClassValue = string | number | boolean | undefined | null;
 type ClassArray = ClassValue[];
-type ClassDictionary = Record<string, any>;
+type ClassDictionary = Record<string, boolean>;
 type ClassInput = ClassValue | ClassArray | ClassDictionary;
 
 /**
@@ -23,13 +23,17 @@ export function cn(...inputs: ClassInput[]): string {
   const classes: string[] = [];
 
   for (const input of inputs) {
-    if (!input) continue;
+    if (!input) {
+      continue;
+    }
 
     if (typeof input === 'string' || typeof input === 'number') {
       classes.push(String(input));
     } else if (Array.isArray(input)) {
       const result = cn(...input);
-      if (result) classes.push(result);
+      if (result) {
+        classes.push(result);
+      }
     } else if (typeof input === 'object') {
       for (const key in input) {
         if (input[key]) {
