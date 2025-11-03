@@ -9,7 +9,7 @@ Related to Task 5.1 in PRD-0002 (Phase 2: Simple Agent Foundation)
 
 import pytest
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from backend.agents.simple_agent import create_customer_service_agent, get_agent
 
 

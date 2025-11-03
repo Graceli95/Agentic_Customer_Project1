@@ -1,19 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { getOrCreateSessionId, clearSession } from '@/lib/sessionManager';
 import ChatInterface from '@/components/ChatInterface';
 
 export default function Home() {
-  const [sessionId, setSessionId] = useState<string>('');
-  const [isClient, setIsClient] = useState(false);
-
-  // Initialize session on component mount
-  useEffect(() => {
-    setIsClient(true);
-    const id = getOrCreateSessionId();
-    setSessionId(id);
-  }, []);
+  // Initialize session ID lazily on first render (client-side only)
+  const [sessionId, setSessionId] = useState<string>(() => {
+    // This only runs on the client during first render
+    if (typeof window !== 'undefined') {
+      return getOrCreateSessionId();
+    }
+    return '';
+  });
 
   // Handle clearing the session
   const handleClearSession = () => {
@@ -21,8 +20,8 @@ export default function Home() {
     setSessionId(newId);
   };
 
-  // Show loading state until client-side hydration is complete
-  if (!isClient) {
+  // Show loading state during SSR or if session isn't ready
+  if (!sessionId) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">

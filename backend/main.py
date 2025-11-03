@@ -350,7 +350,6 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         # OpenAI-specific error handling
         # Check error type and handle accordingly
-        error_type = type(e).__name__
         
         if OPENAI_AVAILABLE:
             if isinstance(e, AuthenticationError):
@@ -525,8 +524,8 @@ async def startup_event():
         test_agent = get_agent()
         logger.info("✅ LangChain agent initialized successfully")
         logger.info(f"   Agent name: {test_agent.name}")
-        logger.info(f"   Model: GPT-4o-mini (OpenAI)")
-        logger.info(f"   Memory: InMemorySaver (conversation history)")
+        logger.info("   Model: GPT-4o-mini (OpenAI)")
+        logger.info("   Memory: InMemorySaver (conversation history)")
     except RuntimeError as e:
         logger.error("")
         logger.error("=" * 70)

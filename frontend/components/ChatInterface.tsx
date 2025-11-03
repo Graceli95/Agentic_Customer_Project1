@@ -11,7 +11,7 @@
 'use client';
 
 import { useState } from 'react';
-import MessageList, { Message } from './MessageList';
+import MessageList, { type Message } from './MessageList';
 import MessageInput from './MessageInput';
 import { sendChatMessage, formatErrorMessage } from '@/lib/api';
 
