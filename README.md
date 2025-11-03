@@ -1,6 +1,10 @@
 # Advanced Multi-Agent Customer Service AI
 
-An intelligent, agentic customer service system powered by LangChain v1.0+ and LangGraph. This system uses specialized AI agents to handle technical support, billing inquiries, and compliance questions through natural language conversations.
+An intelligent, agentic customer service system powered by LangChain v1.0+ and LangGraph.
+
+**Current Status: Phase 2 Complete ✅** - Simple Agent Foundation with conversation memory and full-stack chat interface.
+
+This system uses AI agents to provide natural language customer service conversations. Phase 2 implements a single conversational agent with memory management, providing a foundation for multi-agent architectures in future phases.
 
 ## 🚀 Quick Start
 
@@ -33,6 +37,51 @@ pnpm dev
 
 ---
 
+## ✨ Phase 2 Features (Current)
+
+**What's Working Now:**
+
+🤖 **Conversational AI Agent**
+- Powered by OpenAI GPT-4o-mini
+- Natural language understanding
+- Context-aware responses
+
+💾 **Session Management**
+- UUID-based session IDs
+- Conversation memory (InMemorySaver)
+- Persistent across page refreshes
+- Clear conversation to start fresh
+
+🎨 **Modern Chat Interface**
+- Real-time message display
+- User/AI message distinction
+- Loading indicators ("AI is thinking...")
+- Error handling with user-friendly messages
+- Character count and validation
+- Auto-scroll to latest message
+
+✅ **Production Quality**
+- 37 automated tests passing (69% coverage)
+- Comprehensive error handling
+- LangSmith tracing support
+- Type-safe TypeScript frontend
+- RESTful API design
+
+**Try It Out:**
+1. Start the application (see Quick Start above)
+2. Open http://localhost:3000
+3. Start chatting with the AI!
+4. Test conversation memory: "My name is Alice" → "What is my name?"
+5. Clear conversation to start a new session
+
+**Next Phases:**
+- **Phase 3**: Multi-agent supervisor pattern
+- **Phase 4**: Specialized worker agents (technical, billing, compliance)
+- **Phase 5**: RAG with document retrieval
+- **Phase 6**: AWS Bedrock integration
+
+---
+
 ## 📋 Table of Contents
 
 - [Overview](#overview)
@@ -54,13 +103,25 @@ pnpm dev
 
 ## 🎯 Overview
 
-This project implements a sophisticated customer service AI system using multiple specialized agents that can:
+This project implements an intelligent customer service AI system powered by LangChain v1.0+ and OpenAI's GPT-4o-mini.
 
-- **Handle Technical Support**: Answer technical questions using product documentation
-- **Process Billing Inquiries**: Assist with billing, payments, and account questions
-- **Answer Compliance Questions**: Provide information about policies, terms, and regulations
-- **Route Intelligently**: Automatically route queries to the appropriate specialized agent
-- **Maintain Context**: Keep conversation history for natural, contextual interactions
+**Phase 2 (Current) - Simple Agent Foundation:**
+
+A conversational AI agent with memory management that:
+
+- 💬 **Engages in Natural Conversations**: Understands and responds to customer queries
+- 🧠 **Maintains Context**: Remembers conversation history within each session
+- 🔄 **Manages Sessions**: UUID-based session IDs for multiple conversations
+- ⚡ **Responds in Real-Time**: Fast, context-aware responses via REST API
+- 🎨 **Modern Web Interface**: Full-stack Next.js chat interface
+
+**Future Phases (Planned):**
+
+- **Phase 3+**: Multi-agent supervisor pattern
+- **Handle Technical Support**: Specialized agent with product documentation (RAG)
+- **Process Billing Inquiries**: Dedicated agent for billing and payments
+- **Answer Compliance Questions**: Specialized agent for policies and regulations
+- **Route Intelligently**: Supervisor agent routes to appropriate specialist
 
 **Key Technologies:**
 
@@ -77,17 +138,55 @@ This project implements a sophisticated customer service AI system using multipl
 
 ## 🏗️ Architecture
 
-This system uses a **supervisor pattern** where a main coordinator agent routes queries to specialized worker agents:
+**Phase 2 Architecture (Current):**
 
+```
+┌─────────────────────────────────────────────┐
+│         Frontend (Next.js)                  │
+│   ┌────────────────────────────────────┐   │
+│   │  Chat Interface                    │   │
+│   │  • Message display                 │   │
+│   │  • Input handling                  │   │
+│   │  • Session management (UUID)       │   │
+│   └──────────────┬─────────────────────┘   │
+└──────────────────┼─────────────────────────┘
+                   │ POST /chat
+                   │ {message, session_id}
+                   ↓
+┌─────────────────────────────────────────────┐
+│      Backend (FastAPI + LangChain)          │
+│   ┌────────────────────────────────────┐   │
+│   │  /chat Endpoint                    │   │
+│   │  • Request validation              │   │
+│   │  • Session ID handling             │   │
+│   └──────────────┬─────────────────────┘   │
+│                  ↓                          │
+│   ┌────────────────────────────────────┐   │
+│   │  Customer Service Agent            │   │
+│   │  • Model: GPT-4o-mini              │   │
+│   │  • Memory: InMemorySaver           │   │
+│   │  • Session-based context           │   │
+│   └──────────────┬─────────────────────┘   │
+│                  ↓                          │
+│   ┌────────────────────────────────────┐   │
+│   │  Response                          │   │
+│   │  {response, session_id}            │   │
+│   └────────────────────────────────────┘   │
+└─────────────────────────────────────────────┘
+```
+
+**Key Components:**
+- **Single Agent**: One conversational agent handling all queries
+- **Session Memory**: InMemorySaver maintains conversation context per session_id
+- **REST API**: Simple request/response pattern with FastAPI
+- **Type Safety**: Pydantic models for request/response validation
+
+**Future Architecture (Phase 3+):**
+
+Will implement a **supervisor pattern** with specialized worker agents:
 ```
 User Query → Supervisor Agent → [Technical | Billing | Compliance] Agent → Response
 ```
-
-Each specialized agent has:
-- **Domain-specific knowledge**: Access to relevant document repositories
-- **Specialized tools**: Custom functions for their domain
-- **RAG capabilities**: Retrieve and use information from documents
-- **Conversation memory**: Maintain context across interactions
 
 For detailed architecture information, see:
 - 📘 [**ARCHITECTURE.md**](./ARCHITECTURE.md) - Complete system design and patterns
@@ -450,7 +549,9 @@ After enabling, try to:
 
 ## 🧪 Testing
 
-### Backend Tests
+### Automated Tests
+
+**Backend Tests (37 passing, 69% coverage):**
 
 ```bash
 cd backend
@@ -459,24 +560,74 @@ source venv/bin/activate
 # Run all tests
 pytest
 
-# Run with coverage
+# Run with coverage report
 pytest --cov=. --cov-report=html
 
-# Run specific test file
-pytest tests/test_main.py -v
+# Run specific test suites
+pytest tests/test_main.py -v    # API endpoint tests (27 tests)
+pytest tests/test_agent.py -v   # Agent unit tests (10 tests)
+
+# View coverage report
+open htmlcov/index.html
 ```
 
-### Frontend Tests
+**Frontend Linting & Type Checks:**
 
 ```bash
 cd frontend
 
-# Run tests (when configured)
-pnpm test
-
-# Run linting
+# Run ESLint
 pnpm lint
+
+# TypeScript type checking
+pnpm tsc --noEmit
 ```
+
+**Run All Tests (CI-style):**
+
+```bash
+# From project root
+./scripts/test-all.sh
+
+# Or use Make commands
+make test        # Run all tests
+make lint        # Run all linters
+```
+
+### Manual Testing Guide
+
+**Conversation Testing:**
+
+1. **Start the application:**
+   ```bash
+   # Terminal 1: Backend
+   cd backend && source venv/bin/activate && uvicorn main:app --reload
+   
+   # Terminal 2: Frontend
+   cd frontend && pnpm dev
+   ```
+
+2. **Test basic conversation:**
+   - Open http://localhost:3000
+   - Type: "Hello, how can you help me?"
+   - Verify: AI responds appropriately
+
+3. **Test conversation memory:**
+   - Type: "My name is Alice"
+   - Type: "What is my name?"
+   - Verify: AI remembers "Alice"
+
+4. **Test session persistence:**
+   - Refresh the page (F5)
+   - Type: "Do you remember my name?"
+   - Verify: AI still remembers "Alice"
+
+5. **Test clear conversation:**
+   - Click "Clear Conversation" button
+   - Type: "What is my name?"
+   - Verify: AI doesn't remember (new session)
+
+**For comprehensive manual testing scenarios, see [MANUAL_TESTING.md](./MANUAL_TESTING.md)**
 
 ---
 
@@ -565,12 +716,17 @@ This project includes comprehensive documentation:
 
 | Document | Description |
 |----------|-------------|
+| **[README.md](./README.md)** | This file - Project overview, quick start, and Phase 2 features |
+| **[MANUAL_TESTING.md](./MANUAL_TESTING.md)** | **NEW** - Step-by-step manual testing guide with 10 test cases |
+| **[backend/README.md](./backend/README.md)** | **UPDATED** - Backend setup, /chat API docs, LangSmith tracing |
+| **[frontend/README.md](./frontend/README.md)** | Frontend setup, component guide, and styling documentation |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Complete system architecture, design patterns, and technical decisions |
 | **[FLOWCHARTS.md](./FLOWCHARTS.md)** | Visual process flows, sequence diagrams, and system interactions |
 | **[PHASED_DEVELOPMENT_GUIDE.md](./PHASED_DEVELOPMENT_GUIDE.md)** | Development roadmap with phases, milestones, and implementation details |
 | **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Contribution guidelines, Git workflow, and coding standards |
-| **[backend/README.md](./backend/README.md)** | Backend-specific setup, API documentation, and development guidelines |
-| **[frontend/README.md](./frontend/README.md)** | Frontend-specific setup, component guide, and styling documentation |
+| **[DEVELOPMENT.md](./DEVELOPMENT.md)** | **NEW** - Developer setup guide and best practices |
+| **[CI_VERIFICATION.md](./CI_VERIFICATION.md)** | **NEW** - Local vs CI test command mapping |
+| **[Makefile](./Makefile)** | **NEW** - Convenient make commands for common tasks |
 | **[agentic-customer-specs.md](./agentic-customer-specs.md)** | Original project specifications and requirements |
 | **[tasks/](./tasks/)** | PRDs and task lists for feature development |
 
@@ -634,9 +790,35 @@ For questions or issues:
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: November 2, 2025  
-**Status**: Active Development - Phase 1 Complete ✅
+## 🎉 Phase 2 Complete!
+
+**What We Built:**
+- ✅ Simple conversational agent with GPT-4o-mini
+- ✅ Session-based conversation memory (InMemorySaver)
+- ✅ Full-stack chat interface (Next.js + FastAPI)
+- ✅ 37 automated tests (69% coverage)
+- ✅ LangSmith tracing support
+- ✅ Comprehensive documentation
+- ✅ CI/CD with GitHub Actions
+- ✅ Pre-commit hooks and local testing
+
+**Development Timeline:**
+- Phase 1: Project Setup ✅ (Complete)
+- Phase 2: Simple Agent Foundation ✅ (Complete - 20/20 tasks)
+- Phase 3: Multi-Agent Architecture (Next)
+
+**Test Coverage:**
+- Backend: 69% (37 tests passing)
+- Frontend: TypeScript + ESLint checks passing
+- CI: All checks passing
+
+---
+
+**Version**: 1.0.0 (Phase 2)  
+**Last Updated**: November 3, 2025  
+**Status**: Phase 2 Complete ✅ - Production Ready  
+**LangChain Version**: 1.0+  
+**Next Phase**: Multi-Agent Supervisor Pattern (Phase 3)
 
 ---
 

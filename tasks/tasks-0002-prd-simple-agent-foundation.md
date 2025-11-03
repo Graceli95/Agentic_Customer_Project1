@@ -18,6 +18,7 @@
 - `backend/tests/test_main.py` - **UPDATED**: Added 13 new tests for /chat endpoint (27 total tests, 87% coverage)
 - `backend/conftest.py` - **CREATED**: Pytest configuration with --run-integration flag for integration tests
 - `backend/README.md` - **UPDATED**: Phase 2 documentation, /chat endpoint API docs, LangSmith tracing guide, project structure
+- `README.md` - **UPDATED**: Phase 2 features, architecture diagram, conversation testing guide, completion status, documentation table
 - `MANUAL_TESTING.md` - **CREATED**: Comprehensive manual testing guide with 10 test cases, setup instructions, and troubleshooting
 
 ### Frontend Files
@@ -68,11 +69,11 @@
   - [x] 4.5 Update `frontend/app/page.tsx` to use ChatInterface component with session management (branch: feat/phase2-4.5-integrate-chat-interface)
   - [x] 4.6 Add "Clear Conversation" button functionality to generate new session ID (implemented in ChatInterface.tsx)
 
-- [ ] 5.0 Testing and Documentation
+- [x] 5.0 Testing and Documentation
   - [x] 5.1 Create `backend/tests/test_agent.py` with unit tests for agent creation and basic invocation (branch: feat/phase2-5.1-create-agent-tests)
   - [x] 5.2 Update `backend/tests/test_main.py` to test `/chat` endpoint with agent integration (branch: feat/phase2-5.2-update-main-tests)
   - [x] 5.3 Create comprehensive manual testing guide with step-by-step checklist (MANUAL_TESTING.md)
   - [x] 5.4 Update `backend/README.md` with Phase 2 setup, /chat endpoint docs, and LangSmith tracing guide
-  - [ ] 5.5 Update root `README.md` with Phase 2 status, usage instructions, and conversation testing guide
+  - [x] 5.5 Update root `README.md` with Phase 2 features, architecture, testing guide, and completion status
 
 
