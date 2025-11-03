@@ -100,7 +100,7 @@
   - [x] 6.7 Run pytest in backend directory and verify test discovery and execution works (branch: feat/6.7-verify-pytest)
   - [x] 6.8 Run linting on backend using `ruff check` and verify it passes (branch: feat/6.8-verify-ruff-linting)
   - [x] 6.9 Run linting on frontend using `pnpm lint` and verify it passes (branch: feat/6.9-verify-frontend-linting)
-  - [ ] 6.10 Test complete developer setup flow following README instructions
+  - [x] 6.10 Test complete developer setup flow following README instructions (branch: feat/6.10-test-dev-setup-flow)
   - [ ] 6.11 Create `docker-compose.yml` at root with backend service configuration
   - [ ] 6.12 Test backend starts successfully using `docker-compose up`
 
