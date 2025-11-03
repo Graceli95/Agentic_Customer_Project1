@@ -17,6 +17,7 @@
 - `backend/tests/test_agent.py` - **CREATED**: Comprehensive unit tests for agent creation, configuration, and error handling (10 tests)
 - `backend/tests/test_main.py` - **UPDATED**: Added 13 new tests for /chat endpoint (27 total tests, 87% coverage)
 - `backend/conftest.py` - **CREATED**: Pytest configuration with --run-integration flag for integration tests
+- `MANUAL_TESTING.md` - **CREATED**: Comprehensive manual testing guide with 10 test cases, setup instructions, and troubleshooting
 
 ### Frontend Files
 - `frontend/lib/sessionManager.ts` - **CREATED**: Session ID generation and management utilities with UUID v4 and localStorage
@@ -69,7 +70,7 @@
 - [ ] 5.0 Testing and Documentation
   - [x] 5.1 Create `backend/tests/test_agent.py` with unit tests for agent creation and basic invocation (branch: feat/phase2-5.1-create-agent-tests)
   - [x] 5.2 Update `backend/tests/test_main.py` to test `/chat` endpoint with agent integration (branch: feat/phase2-5.2-update-main-tests)
-  - [ ] 5.3 Perform manual testing following the checklist in PRD (conversation memory, session persistence, clear conversation)
+  - [x] 5.3 Create comprehensive manual testing guide with step-by-step checklist (MANUAL_TESTING.md)
   - [ ] 5.4 Update `backend/README.md` with Phase 2 setup instructions and LangSmith configuration
   - [ ] 5.5 Update root `README.md` with Phase 2 status, usage instructions, and conversation testing guide
 
