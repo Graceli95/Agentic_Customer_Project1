@@ -9,7 +9,7 @@ Future (Phase 3+):
 - workers/: Specialized worker agents (Technical, Billing, Policy)
 """
 
-from backend.agents.simple_agent import (
+from agents.simple_agent import (
     create_customer_service_agent,
     get_agent,
 )

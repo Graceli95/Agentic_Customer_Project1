@@ -36,12 +36,12 @@
 ## Tasks
 
 ### 1.0 Backend: Supervisor Agent Setup
-- [ ] 1.1 Create `backend/agents/supervisor_agent.py` with supervisor creation function
+- [x] 1.1 Create `backend/agents/supervisor_agent.py` with supervisor creation function (branch: feat/phase3-1.1-create-supervisor-agent)
   - Use `create_agent()` with tools list
   - Define supervisor system prompt emphasizing routing logic
   - Use same checkpointer pattern from Phase 2
   - Export `create_supervisor_agent()` function
-  - Branch: `feat/phase3-1.1-create-supervisor-agent`
+  - Fixed import structure in `agents/__init__.py` for consistency
 
 - [ ] 1.2 Update `backend/agents/__init__.py` to export supervisor
   - Add import for supervisor agent
