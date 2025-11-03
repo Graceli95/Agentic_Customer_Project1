@@ -22,7 +22,7 @@
 - `frontend/lib/api.ts` - **CREATED**: Backend API client with TypeScript types, error handling, and health checks
 - `frontend/app/page.tsx` - **UPDATED**: Added session initialization, clear session functionality, and session status display
 - `frontend/components/ChatInterface.tsx` - **NEW**: Main chat container component
-- `frontend/components/MessageList.tsx` - **NEW**: Display conversation history
+- `frontend/components/MessageList.tsx` - **CREATED**: Displays conversation history with user/AI distinction, auto-scroll, and loading states
 - `frontend/components/MessageInput.tsx` - **NEW**: User input field with submit
 - `frontend/components/LoadingIndicator.tsx` - **NEW**: Loading state display component
 
@@ -58,7 +58,7 @@
   - [x] 3.3 Add session initialization logic to generate/retrieve UUID on first load (branch: feat/phase2-3.3-session-initialization)
 
 - [ ] 4.0 Frontend: Chat Interface and User Experience
-  - [ ] 4.1 Create `frontend/components/MessageList.tsx` to display conversation history with user/AI distinction
+  - [x] 4.1 Create `frontend/components/MessageList.tsx` to display conversation history with user/AI distinction (branch: feat/phase2-4.1-create-message-list)
   - [ ] 4.2 Create `frontend/components/MessageInput.tsx` with input field, submit button, and disabled state
   - [ ] 4.3 Create `frontend/components/LoadingIndicator.tsx` for "Agent is thinking..." display
   - [ ] 4.4 Create `frontend/components/ChatInterface.tsx` as main container orchestrating all chat components
