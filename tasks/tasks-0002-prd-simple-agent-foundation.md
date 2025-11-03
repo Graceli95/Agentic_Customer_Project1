@@ -46,11 +46,11 @@
   - [x] 1.3 Update `backend/agents/__init__.py` to export `create_customer_service_agent` function
   - [x] 1.4 Update `backend/.env.example` with OpenAI and LangSmith configuration variables
 
-- [ ] 2.0 Backend: API Endpoint Updates and Error Handling
+- [x] 2.0 Backend: API Endpoint Updates and Error Handling
   - [x] 2.1 Create Pydantic models for ChatRequest and ChatResponse with session_id validation
   - [x] 2.2 Add POST `/chat` endpoint to `backend/main.py` that invokes the LangChain agent
   - [x] 2.3 Implement error handling for OpenAI API errors, invalid session IDs, and missing credentials
-  - [ ] 2.4 Add startup validation to check for OPENAI_API_KEY and initialize agent at startup
+  - [x] 2.4 Add startup validation to check for OPENAI_API_KEY and initialize agent at startup
 
 - [ ] 3.0 Frontend: Session Management Implementation
   - [ ] 3.1 Create `frontend/lib/sessionManager.ts` with UUID generation and localStorage utilities

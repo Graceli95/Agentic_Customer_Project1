@@ -433,10 +433,135 @@ async def chat_endpoint(request: ChatRequest):
 
 @app.on_event("startup")
 async def startup_event():
-    """Execute tasks on application startup."""
+    """
+    Execute tasks on application startup.
+    
+    Validates required configuration and initializes the LangChain agent.
+    The application will fail to start if critical configuration is missing.
+    """
+    logger.info("=" * 70)
     logger.info("Starting Advanced Customer Service AI backend...")
-    logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
+    logger.info("=" * 70)
+    
+    # Log environment information
+    environment = os.getenv('ENVIRONMENT', 'development')
+    logger.info(f"Environment: {environment}")
     logger.info(f"CORS origins: {cors_origins}")
+    logger.info(f"Log level: {os.getenv('LOG_LEVEL', 'INFO')}")
+    
+    # ========================================================================
+    # Phase 2: Validate Required Configuration
+    # ========================================================================
+    logger.info("")
+    logger.info("Validating configuration...")
+    
+    # Check for required environment variables
+    required_vars = {
+        "OPENAI_API_KEY": "OpenAI API key for LLM integration"
+    }
+    
+    missing_vars = []
+    for var_name, description in required_vars.items():
+        if not os.getenv(var_name):
+            missing_vars.append(f"  - {var_name}: {description}")
+            logger.error(f"❌ Missing required environment variable: {var_name}")
+        else:
+            # Mask the API key in logs (show only first/last 4 chars)
+            value = os.getenv(var_name)
+            if len(value) > 12:
+                masked_value = f"{value[:4]}...{value[-4:]}"
+            else:
+                masked_value = "****"
+            logger.info(f"✅ {var_name}: {masked_value}")
+    
+    # Check for optional but recommended environment variables
+    optional_vars = {
+        "LANGSMITH_API_KEY": "LangSmith tracing (recommended for debugging)",
+        "LANGSMITH_TRACING": "Enable LangSmith tracing",
+        "LANGSMITH_PROJECT": "LangSmith project name",
+    }
+    
+    logger.info("")
+    logger.info("Optional configuration:")
+    for var_name, description in optional_vars.items():
+        if os.getenv(var_name):
+            if "API_KEY" in var_name:
+                value = os.getenv(var_name)
+                masked_value = f"{value[:4]}...{value[-4:]}" if len(value) > 12 else "****"
+                logger.info(f"✅ {var_name}: {masked_value}")
+            else:
+                logger.info(f"✅ {var_name}: {os.getenv(var_name)}")
+        else:
+            logger.info(f"ℹ️  {var_name}: Not set ({description})")
+    
+    # If any required variables are missing, fail startup
+    if missing_vars:
+        logger.error("")
+        logger.error("=" * 70)
+        logger.error("STARTUP FAILED: Missing required configuration")
+        logger.error("=" * 70)
+        logger.error("The following environment variables are required:")
+        for var in missing_vars:
+            logger.error(var)
+        logger.error("")
+        logger.error("Please:")
+        logger.error("1. Copy backend/.env.example to backend/.env")
+        logger.error("2. Add your OPENAI_API_KEY to backend/.env")
+        logger.error("3. Restart the application")
+        logger.error("=" * 70)
+        raise RuntimeError(
+            "Missing required environment variables. "
+            "See logs above for details."
+        )
+    
+    # ========================================================================
+    # Phase 2: Initialize LangChain Agent
+    # ========================================================================
+    logger.info("")
+    logger.info("Initializing LangChain agent...")
+    
+    try:
+        # Attempt to get the agent (this validates the configuration)
+        test_agent = get_agent()
+        logger.info("✅ LangChain agent initialized successfully")
+        logger.info(f"   Agent name: {test_agent.name}")
+        logger.info(f"   Model: GPT-4o-mini (OpenAI)")
+        logger.info(f"   Memory: InMemorySaver (conversation history)")
+    except RuntimeError as e:
+        logger.error("")
+        logger.error("=" * 70)
+        logger.error("STARTUP FAILED: Agent initialization error")
+        logger.error("=" * 70)
+        logger.error(f"Error: {e}")
+        logger.error("")
+        logger.error("This usually means:")
+        logger.error("1. OPENAI_API_KEY is set but invalid")
+        logger.error("2. There's a problem with the agent configuration")
+        logger.error("")
+        logger.error("Please check your API key and try again.")
+        logger.error("=" * 70)
+        raise
+    except Exception as e:
+        logger.error("")
+        logger.error("=" * 70)
+        logger.error("STARTUP FAILED: Unexpected error during agent initialization")
+        logger.error("=" * 70)
+        logger.error(f"Error: {e}")
+        logger.error("=" * 70)
+        raise
+    
+    # ========================================================================
+    # Startup Complete
+    # ========================================================================
+    logger.info("")
+    logger.info("=" * 70)
+    logger.info("✅ Advanced Customer Service AI backend started successfully!")
+    logger.info("=" * 70)
+    logger.info(f"API Documentation: http://localhost:{os.getenv('PORT', 8000)}/docs")
+    logger.info(f"Health Check: http://localhost:{os.getenv('PORT', 8000)}/health")
+    logger.info(f"Chat Endpoint: POST http://localhost:{os.getenv('PORT', 8000)}/chat")
+    logger.info("=" * 70)
+    logger.info("")
 
 
 @app.on_event("shutdown")
