@@ -47,7 +47,7 @@
   - [x] 1.4 Update `backend/.env.example` with OpenAI and LangSmith configuration variables
 
 - [ ] 2.0 Backend: API Endpoint Updates and Error Handling
-  - [ ] 2.1 Create Pydantic models for ChatRequest and ChatResponse with session_id validation
+  - [x] 2.1 Create Pydantic models for ChatRequest and ChatResponse with session_id validation
   - [ ] 2.2 Add POST `/chat` endpoint to `backend/main.py` that invokes the LangChain agent
   - [ ] 2.3 Implement error handling for OpenAI API errors, invalid session IDs, and missing credentials
   - [ ] 2.4 Add startup validation to check for OPENAI_API_KEY and initialize agent at startup
