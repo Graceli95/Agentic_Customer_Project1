@@ -23,7 +23,7 @@
 - `frontend/app/page.tsx` - **UPDATED**: Added session initialization, clear session functionality, and session status display
 - `frontend/components/ChatInterface.tsx` - **NEW**: Main chat container component
 - `frontend/components/MessageList.tsx` - **CREATED**: Displays conversation history with user/AI distinction, auto-scroll, and loading states
-- `frontend/components/MessageInput.tsx` - **NEW**: User input field with submit
+- `frontend/components/MessageInput.tsx` - **CREATED**: User input field with submit button, character limit, keyboard shortcuts, and validation
 - `frontend/components/LoadingIndicator.tsx` - **NEW**: Loading state display component
 
 ### Documentation Files
@@ -59,7 +59,7 @@
 
 - [ ] 4.0 Frontend: Chat Interface and User Experience
   - [x] 4.1 Create `frontend/components/MessageList.tsx` to display conversation history with user/AI distinction (branch: feat/phase2-4.1-create-message-list)
-  - [ ] 4.2 Create `frontend/components/MessageInput.tsx` with input field, submit button, and disabled state
+  - [x] 4.2 Create `frontend/components/MessageInput.tsx` with input field, submit button, and disabled state (branch: feat/phase2-4.2-create-message-input)
   - [ ] 4.3 Create `frontend/components/LoadingIndicator.tsx` for "Agent is thinking..." display
   - [ ] 4.4 Create `frontend/components/ChatInterface.tsx` as main container orchestrating all chat components
   - [ ] 4.5 Update `frontend/app/page.tsx` to use ChatInterface component with session management
