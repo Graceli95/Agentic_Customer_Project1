@@ -8,15 +8,16 @@ pydantic~=2.12
 pydantic-settings~=2.11
 
 # LangChain Core (v1.0+)
-langchain~=1.0
-langchain-core~=1.0
-langchain-community~=0.4
+# Updated for Phase 2: Simple Agent Foundation
+langchain>=1.0.0
+langchain-core>=1.0.0
+langchain-community>=0.4.0
 
 # LangChain Integrations
-langchain-openai~=1.0
+langchain-openai>=1.0.0
 
-# LangGraph for agent orchestration
-langgraph~=1.0
+# LangGraph for agent orchestration (includes checkpoint.memory)
+langgraph>=1.0.0
 
 # Vector Database
 chromadb~=1.3

@@ -41,7 +41,7 @@
 ## Tasks
 
 - [ ] 1.0 Backend: LangChain Agent Setup and Integration
-  - [ ] 1.1 Verify and update LangChain packages in requirements.txt to ensure v1.0+ compatibility
+  - [x] 1.1 Verify and update LangChain packages in requirements.txt to ensure v1.0+ compatibility
   - [ ] 1.2 Create `backend/agents/simple_agent.py` with agent initialization using `create_agent()`
   - [ ] 1.3 Update `backend/agents/__init__.py` to export `create_customer_service_agent` function
   - [ ] 1.4 Update `backend/.env.example` with OpenAI and LangSmith configuration variables
