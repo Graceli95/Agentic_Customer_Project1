@@ -57,12 +57,13 @@
   - Export `create_technical_support_agent()` and `get_technical_agent()` functions
   - No checkpointer (supervisor maintains context)
 
-- [ ] 2.2 Wrap technical worker as tool for supervisor
+- [x] 2.2 Wrap technical worker as tool for supervisor (branch: feat/phase3-2.2-wrap-technical-tool)
   - Use `@tool` decorator to wrap agent
-  - Write clear tool description for routing (technical issues, errors, bugs)
-  - Tool invokes technical agent and returns response
+  - Clear tool description for routing (errors, bugs, crashes, troubleshooting)
+  - Lists specific use cases (error codes, installation, configuration, etc.)
+  - Tool invokes technical agent and returns complete response
+  - Added logging for debugging tool calls
   - Export `technical_support_tool`
-  - Branch: `feat/phase3-2.2-wrap-technical-tool`
 
 - [ ] 2.3 Update `backend/agents/workers/__init__.py` to export worker and tool
   - Import technical support agent and tool
