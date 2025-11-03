@@ -1,4 +1,25 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getOrCreateSessionId, clearSession } from '@/lib/sessionManager';
+
 export default function Home() {
+  const [sessionId, setSessionId] = useState<string>('');
+  const [isClient, setIsClient] = useState(false);
+
+  // Initialize session on component mount
+  useEffect(() => {
+    setIsClient(true);
+    const id = getOrCreateSessionId();
+    setSessionId(id);
+  }, []);
+
+  // Handle clearing the session
+  const handleClearSession = () => {
+    const newId = clearSession();
+    setSessionId(newId);
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8">
       {/* Hero Section */}
@@ -58,13 +79,37 @@ export default function Home() {
           </ul>
         </div>
 
+        {/* Session Status - Demo for Phase 2 Task 3.3 */}
+        {isClient && (
+          <div className="mb-8 w-full max-w-2xl rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
+            <h3 className="mb-3 text-lg font-semibold text-blue-900 dark:text-blue-100">
+              Session Initialized ✓
+            </h3>
+            <p className="mb-2 text-sm text-blue-700 dark:text-blue-300">
+              Your conversation session is active and ready. This session persists across page refreshes.
+            </p>
+            <div className="mb-4 rounded bg-white p-3 font-mono text-xs text-gray-700 dark:bg-gray-900 dark:text-gray-300">
+              Session ID: {sessionId}
+            </div>
+            <button
+              onClick={handleClearSession}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
+              Clear Session (Generate New ID)
+            </button>
+            <p className="mt-3 text-xs text-blue-600 dark:text-blue-400">
+              💡 Try refreshing the page - your session ID will remain the same!
+            </p>
+          </div>
+        )}
+
         {/* Status Badge */}
-        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
           <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
           </span>
-          In Development - Phase 1: Project Setup
+          In Development - Phase 2: Session Management Active
         </div>
 
         {/* Feature Cards */}
