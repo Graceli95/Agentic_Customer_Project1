@@ -14,7 +14,7 @@
 - `backend/main.py` - **UPDATE**: Replace echo endpoint with LangChain agent invocation
 - `backend/requirements.txt` - **UPDATE**: Add LangChain v1.0+ packages (already includes some, verify versions)
 - `backend/.env.example` - **UPDATE**: Add OpenAI and LangSmith configuration variables
-- `backend/tests/test_agent.py` - **NEW**: Unit tests for agent creation and invocation
+- `backend/tests/test_agent.py` - **CREATED**: Comprehensive unit tests for agent creation, configuration, and error handling (10 tests)
 - `backend/tests/test_main.py` - **UPDATE**: Integration tests for /chat endpoint with agent
 
 ### Frontend Files
@@ -66,7 +66,7 @@
   - [x] 4.6 Add "Clear Conversation" button functionality to generate new session ID (implemented in ChatInterface.tsx)
 
 - [ ] 5.0 Testing and Documentation
-  - [ ] 5.1 Create `backend/tests/test_agent.py` with unit tests for agent creation and basic invocation
+  - [x] 5.1 Create `backend/tests/test_agent.py` with unit tests for agent creation and basic invocation (branch: feat/phase2-5.1-create-agent-tests)
   - [ ] 5.2 Update `backend/tests/test_main.py` to test `/chat` endpoint with agent integration
   - [ ] 5.3 Perform manual testing following the checklist in PRD (conversation memory, session persistence, clear conversation)
   - [ ] 5.4 Update `backend/README.md` with Phase 2 setup instructions and LangSmith configuration
