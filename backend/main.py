@@ -16,6 +16,9 @@ import os
 import logging
 import re
 
+# Import LangChain agent
+from backend.agents import get_agent
+
 # Load environment variables
 load_dotenv()
 
@@ -216,6 +219,120 @@ async def root():
         "health": "/health",
         "version": "1.0.0",
     }
+
+
+# ============================================================================
+# Chat Endpoint - LangChain Agent Integration
+# ============================================================================
+
+
+@app.post("/chat", response_model=ChatResponse, responses={
+    400: {"model": ErrorResponse, "description": "Bad Request - Invalid input"},
+    500: {"model": ErrorResponse, "description": "Internal Server Error"},
+})
+async def chat_endpoint(request: ChatRequest):
+    """
+    Process user messages through the LangChain customer service agent.
+    
+    This endpoint:
+    - Validates the incoming message and session ID
+    - Invokes the LangChain agent with conversation memory
+    - Maintains conversation history per session (thread_id)
+    - Returns the AI assistant's response
+    
+    Args:
+        request: ChatRequest containing message and session_id
+        
+    Returns:
+        ChatResponse: AI assistant's response with session confirmation
+        
+    Raises:
+        HTTPException 400: Invalid session ID format
+        HTTPException 500: Agent initialization error or LLM API error
+        
+    Example:
+        Request:
+        ```json
+        {
+            "message": "Hello, I need help with my account",
+            "session_id": "550e8400-e29b-41d4-a716-446655440000"
+        }
+        ```
+        
+        Response:
+        ```json
+        {
+            "response": "I'd be happy to help you with your account...",
+            "session_id": "550e8400-e29b-41d4-a716-446655440000"
+        }
+        ```
+    """
+    try:
+        logger.info(f"Received chat request for session: {request.session_id}")
+        logger.debug(f"Message: {request.message[:50]}...")  # Log first 50 chars
+        
+        # Get the LangChain agent
+        # This may raise RuntimeError if agent isn't initialized (missing API key)
+        try:
+            agent = get_agent()
+        except RuntimeError as e:
+            logger.error(f"Agent not initialized: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail={
+                    "error": "Service configuration error",
+                    "detail": str(e),
+                    "session_id": request.session_id
+                }
+            )
+        
+        # Create configuration with thread_id for conversation memory
+        # This enables the agent to maintain context across multiple messages
+        config = {"configurable": {"thread_id": request.session_id}}
+        
+        # Invoke the LangChain agent
+        # The agent will:
+        # 1. Load conversation history for this thread_id
+        # 2. Process the new message with full context
+        # 3. Generate a response using GPT-4o-mini
+        # 4. Save the updated conversation to memory
+        logger.info(f"Invoking agent for session: {request.session_id}")
+        
+        result = agent.invoke(
+            {"messages": [{"role": "user", "content": request.message}]},
+            config
+        )
+        
+        # Extract the agent's response from the result
+        # The last message in the conversation is the agent's response
+        response_text = result["messages"][-1].content
+        
+        logger.info(f"Agent response generated for session: {request.session_id}")
+        logger.debug(f"Response: {response_text[:50]}...")  # Log first 50 chars
+        
+        # Return the response with session confirmation
+        return ChatResponse(
+            response=response_text,
+            session_id=request.session_id
+        )
+        
+    except HTTPException:
+        # Re-raise HTTPExceptions (validation errors, agent init errors)
+        raise
+        
+    except Exception as e:
+        # Catch any unexpected errors (OpenAI API errors, network issues, etc.)
+        logger.error(f"Unexpected error in chat endpoint: {str(e)}", exc_info=True)
+        
+        # Return a user-friendly error without exposing internal details
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "Failed to process your message",
+                "detail": "An unexpected error occurred. Please try again in a moment.",
+                "session_id": request.session_id
+            }
+        )
 
 
 # ============================================================================
