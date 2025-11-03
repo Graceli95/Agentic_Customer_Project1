@@ -101,6 +101,6 @@
   - [x] 6.8 Run linting on backend using `ruff check` and verify it passes (branch: feat/6.8-verify-ruff-linting)
   - [x] 6.9 Run linting on frontend using `pnpm lint` and verify it passes (branch: feat/6.9-verify-frontend-linting)
   - [x] 6.10 Test complete developer setup flow following README instructions (branch: feat/6.10-test-dev-setup-flow)
-  - [ ] 6.11 Create `docker-compose.yml` at root with backend service configuration
+  - [x] 6.11 Create `docker-compose.yml` at root with backend service configuration (branch: feat/6.11-create-docker-compose)
   - [ ] 6.12 Test backend starts successfully using `docker-compose up`
 
