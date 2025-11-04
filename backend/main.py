@@ -10,12 +10,15 @@ Last Updated: November 2, 2025
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator, ValidationError
 from dotenv import load_dotenv
 import os
 import logging
 import re
 import time
+import json
+import asyncio
 
 # Import LangChain agent (Phase 3: using supervisor for multi-agent routing)
 from agents import get_supervisor
@@ -458,6 +461,147 @@ async def chat_endpoint(request: ChatRequest):
                 "session_id": request.session_id,
             },
         )
+
+
+# ============================================================================
+# Streaming Chat Endpoint (Phase 6: Real-time token streaming)
+# ============================================================================
+
+
+@app.post("/chat/stream")
+async def chat_stream_endpoint(request: ChatRequest):
+    """
+    Stream AI responses in real-time using Server-Sent Events (SSE).
+    
+    This endpoint provides token-by-token streaming of the AI assistant's response,
+    enabling a more interactive user experience with immediate feedback.
+    
+    Phase 6: Multi-Provider LLMs & Streaming
+    
+    Args:
+        request: ChatRequest containing message and session_id
+        
+    Returns:
+        StreamingResponse: SSE stream with agent response chunks
+        
+    Event Format:
+        Each SSE event is a JSON object:
+        ```
+        data: {"type": "token", "content": "Hello", "session_id": "..."}
+        data: {"type": "token", "content": " world", "session_id": "..."}
+        data: {"type": "done", "session_id": "..."}
+        ```
+        
+    Event Types:
+        - "start": Stream initialization
+        - "token": Individual response token/chunk
+        - "done": Stream completion
+        - "error": Error occurred during streaming
+        
+    Example:
+        ```bash
+        curl -X POST http://localhost:8000/chat/stream \\
+          -H "Content-Type: application/json" \\
+          -d '{"message": "Hello", "session_id": "550e8400-e29b-41d4-a716-446655440000"}'
+        ```
+    """
+    
+    async def generate_stream():
+        """
+        Generate SSE stream of agent responses.
+        
+        Yields SSE-formatted events with token chunks and metadata.
+        """
+        try:
+            logger.info(f"Starting streaming chat for session: {request.session_id}")
+            logger.debug(f"Message: {request.message[:50]}...")
+            
+            # Send start event
+            yield f"data: {json.dumps({'type': 'start', 'session_id': request.session_id})}\\n\\n"
+            
+            # Get supervisor agent
+            try:
+                agent = get_supervisor()
+            except RuntimeError as e:
+                logger.error(f"Agent not initialized: {e}")
+                yield f"data: {json.dumps({'type': 'error', 'error': 'Service configuration error', 'detail': str(e), 'session_id': request.session_id})}\\n\\n"
+                return
+            
+            # Create configuration with thread_id for conversation memory
+            config = {"configurable": {"thread_id": request.session_id}}
+            
+            # Invoke agent with streaming
+            # Note: LangGraph agents support streaming via astream()
+            logger.info(f"Invoking streaming agent for session: {request.session_id}")
+            start_time = time.time()
+            
+            full_response = ""
+            token_count = 0
+            
+            try:
+                # Stream agent responses
+                async for event in agent.astream(
+                    {"messages": [{"role": "user", "content": request.message}]},
+                    config
+                ):
+                    # Extract content from agent events
+                    # LangGraph streams events as dictionaries with message updates
+                    if "messages" in event:
+                        # Get the latest message
+                        messages = event["messages"]
+                        if messages and len(messages) > 0:
+                            latest_message = messages[-1]
+                            
+                            # Check if it's an assistant message
+                            if hasattr(latest_message, "content") and hasattr(latest_message, "type"):
+                                if latest_message.type == "ai" or getattr(latest_message, "role", None) == "assistant":
+                                    content = latest_message.content
+                                    
+                                    # Send the new content (delta from previous)
+                                    if content and content != full_response:
+                                        delta = content[len(full_response):]
+                                        if delta:
+                                            full_response = content
+                                            token_count += 1
+                                            
+                                            # Send token event
+                                            yield f"data: {json.dumps({'type': 'token', 'content': delta, 'session_id': request.session_id})}\\n\\n"
+                                            
+                                            # Small delay to prevent overwhelming the client
+                                            await asyncio.sleep(0.01)
+            
+            except Exception as stream_error:
+                logger.error(f"Streaming error: {stream_error}", exc_info=True)
+                yield f"data: {json.dumps({'type': 'error', 'error': str(stream_error), 'session_id': request.session_id})}\\n\\n"
+                return
+            
+            elapsed_time = time.time() - start_time
+            logger.info(
+                f"Streaming completed for session: {request.session_id} "
+                f"({token_count} chunks, {elapsed_time:.2f}s)"
+            )
+            
+            # Send completion event
+            yield f"data: {json.dumps({'type': 'done', 'session_id': request.session_id, 'tokens': token_count, 'time': elapsed_time})}\\n\\n"
+            
+        except ValidationError as e:
+            logger.warning(f"Validation error: {e}")
+            yield f"data: {json.dumps({'type': 'error', 'error': 'Invalid request format', 'detail': str(e), 'session_id': request.session_id})}\\n\\n"
+            
+        except Exception as e:
+            logger.error(f"Unexpected streaming error: {e}", exc_info=True)
+            yield f"data: {json.dumps({'type': 'error', 'error': 'Unexpected error', 'detail': str(e), 'session_id': request.session_id})}\\n\\n"
+    
+    # Return StreamingResponse with SSE headers
+    return StreamingResponse(
+        generate_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+        },
+    )
 
 
 # ============================================================================
