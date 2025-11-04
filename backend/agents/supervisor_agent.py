@@ -5,6 +5,7 @@ This module creates a supervisor agent that routes queries to specialized
 worker agents using the tool-calling pattern (LangChain v1.0).
 
 Phase: 4 - Additional Worker Agents (4 workers total)
+Phase: 6 - Multi-Provider LLMs (AWS Nova Lite + OpenAI)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
 Last Updated: November 4, 2025
@@ -158,21 +159,40 @@ Response Guidelines:
 Remember: You coordinate 4 specialized experts. Your job is intelligent routing, not doing specialized work.
 Each specialist is an expert in their domain - trust their responses."""
 
-    # Create supervisor agent using LangChain v1.0 pattern
+    # Create supervisor agent using LangChain v1.0 pattern with AWS Bedrock
+    # Strategy: Use AWS Nova Lite for cost-effective routing, fallback to OpenAI
     # ✅ DO: Use create_agent() from langchain.agents
     # ❌ DON'T: Use deprecated initialize_agent() or create_react_agent()
-    supervisor = create_agent(
-        model="openai:gpt-4o-mini",  # Fast, cost-effective model for routing
-        # To upgrade: model="openai:gpt-4o" for better routing quality
-        tools=tools,  # Worker agents wrapped as tools
-        system_prompt=system_prompt,
-        checkpointer=checkpointer,  # Shared memory for conversation continuity
-        name="supervisor_agent",  # Required in LangChain v1.0
-        # Agent name helps with:
-        # - Debugging and tracing in LangSmith
-        # - Identifying agents in logs
-        # - Multi-agent systems coordination
-    )
+    
+    # Try AWS Nova Lite first (cheapest option: $0.06/1M input tokens)
+    try:
+        logger.info("Attempting to create supervisor with AWS Nova Lite")
+        supervisor = create_agent(
+            model="bedrock:us.amazon.nova-lite-v1:0",  # AWS Nova Lite for routing
+            # Cost: $0.06 input / $0.24 output per 1M tokens (60% cheaper than GPT-4o-mini)
+            # Perfect for: Classification, routing, lightweight tasks
+            # Region: us-east-1 (ensure AWS_DEFAULT_REGION is set)
+            tools=tools,  # Worker agents wrapped as tools
+            system_prompt=system_prompt,
+            checkpointer=checkpointer,  # Shared memory for conversation continuity
+            name="supervisor_agent",  # Required in LangChain v1.0
+        )
+        logger.info("✅ Supervisor created successfully with AWS Nova Lite")
+        
+    except Exception as e:
+        # Fallback to OpenAI GPT-4o-mini if Bedrock unavailable
+        logger.warning(f"AWS Bedrock unavailable, falling back to OpenAI: {e}")
+        logger.info("Creating supervisor with OpenAI GPT-4o-mini (fallback)")
+        
+        supervisor = create_agent(
+            model="openai:gpt-4o-mini",  # Fallback: Reliable, fast routing
+            # Cost: $0.15 input / $0.60 output per 1M tokens
+            tools=tools,  # Worker agents wrapped as tools
+            system_prompt=system_prompt,
+            checkpointer=checkpointer,  # Shared memory for conversation continuity
+            name="supervisor_agent",  # Required in LangChain v1.0
+        )
+        logger.info("✅ Supervisor created successfully with OpenAI GPT-4o-mini (fallback)")
 
     logger.info("Supervisor agent created successfully")
     return supervisor

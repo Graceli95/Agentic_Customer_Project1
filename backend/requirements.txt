@@ -15,6 +15,7 @@ langchain-community>=0.4.0
 
 # LangChain Integrations
 langchain-openai>=1.0.0
+langchain-aws>=1.0.0
 
 # LangGraph for agent orchestration (includes checkpoint.memory)
 langgraph>=1.0.0
