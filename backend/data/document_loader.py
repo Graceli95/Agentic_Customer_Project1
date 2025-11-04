@@ -13,11 +13,10 @@ import logging
 from pathlib import Path
 from typing import List
 
-from langchain.schema import Document
+from langchain_core.documents import Document
 from langchain_community.document_loaders import (
     DirectoryLoader,
     TextLoader,
-    UnstructuredMarkdownLoader,
 )
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -38,7 +37,7 @@ def load_documents(
     
     Supports:
     - .txt files (TextLoader)
-    - .md files (UnstructuredMarkdownLoader)
+    - .md files (TextLoader - markdown is text)
     
     Args:
         directory: Path to directory containing documents
@@ -79,11 +78,11 @@ def load_documents(
         logger.warning(f"No .txt files found or error loading: {e}")
     
     try:
-        # Load .md files
+        # Load .md files (markdown is just text, so we can use TextLoader)
         md_loader = DirectoryLoader(
             str(directory_path),
             glob="**/*.md",
-            loader_cls=UnstructuredMarkdownLoader,
+            loader_cls=TextLoader,
             show_progress=False,
             use_multithreading=False,
         )
@@ -145,10 +144,8 @@ def load_single_document(file_path: str | Path) -> str:
         # Determine loader based on extension
         extension = file_path.suffix.lower()
         
-        if extension == ".txt":
+        if extension in [".txt", ".md"]:
             loader = TextLoader(str(file_path))
-        elif extension == ".md":
-            loader = UnstructuredMarkdownLoader(str(file_path))
         else:
             logger.warning(f"Unsupported file type: {extension}, trying TextLoader")
             loader = TextLoader(str(file_path))

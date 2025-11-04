@@ -23,6 +23,10 @@ from pathlib import Path
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Load environment variables (override=True to use .env file values over shell env vars)
+from dotenv import load_dotenv
+load_dotenv(override=True)
+
 from data.document_loader import load_documents, get_document_stats
 from data.vectorstore import get_vectorstore, clear_vectorstore
 
@@ -78,7 +82,7 @@ def index_domain(domain: str, force: bool = False) -> bool:
         logger.info(f"Initializing vector store for domain: {domain}")
         vectorstore = get_vectorstore(domain)
         
-        if not vectorstore:
+        if vectorstore is None:
             logger.error(f"Failed to initialize vector store for {domain}")
             return False
         
