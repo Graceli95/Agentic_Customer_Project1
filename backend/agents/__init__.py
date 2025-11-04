@@ -10,13 +10,13 @@ Phase 3: Multi-Agent Supervisor Architecture ✅
 """
 
 # Phase 2: Simple Agent (for reference/fallback)
-from agents.simple_agent import (
+from .simple_agent import (
     create_customer_service_agent,
     get_agent,
 )
 
 # Phase 3: Supervisor Agent (primary for multi-agent routing)
-from agents.supervisor_agent import (
+from .supervisor_agent import (
     create_supervisor_agent,
     get_supervisor,
 )

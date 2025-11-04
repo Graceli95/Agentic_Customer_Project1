@@ -16,28 +16,28 @@ Future (Phase 5+):
 """
 
 # Phase 3: Technical Support Worker
-from agents.workers.technical_support import (
+from .technical_support import (
     create_technical_support_agent,
     get_technical_agent,
     technical_support_tool,
 )
 
 # Phase 4: Billing Support Worker
-from agents.workers.billing_support import (
+from .billing_support import (
     create_billing_support_agent,
     get_billing_agent,
     billing_support_tool,
 )
 
 # Phase 4: Compliance Worker
-from agents.workers.compliance import (
+from .compliance import (
     create_compliance_agent,
     get_compliance_agent,
     compliance_tool,
 )
 
 # Phase 4: General Information Worker
-from agents.workers.general_info import (
+from .general_info import (
     create_general_info_agent,
     get_general_info_agent,
     general_info_tool,
