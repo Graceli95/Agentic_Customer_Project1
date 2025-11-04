@@ -1167,7 +1167,7 @@ User → /chat Endpoint → Supervisor Agent (Analyzes Query)
 
 **Version**: 1.1.0 (Phase 4)  
 **Last Updated**: November 4, 2025  
-**LangChain Version**: 1.0+  
+**LangChain Version**: 1.0+
 **Test Coverage**: 145 tests passing (129 unit + 16 integration)  
 **Status**: ✅ Production Ready
 

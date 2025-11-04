@@ -22,7 +22,7 @@ export default function Home() {
 
   // Show loading state during SSR or if session isn't ready
   if (!sessionId) {
-    return (
+  return (
       <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="text-center">
           <div className="mb-4 flex justify-center">
@@ -30,7 +30,7 @@ export default function Home() {
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
-      </div>
+        </div>
     );
   }
 

@@ -20,7 +20,11 @@ langchain-openai>=1.0.0
 langgraph>=1.0.0
 
 # Vector Database
-chromadb~=1.3
+chromadb==0.4.22
+
+# Phase 5: RAG/CAG Dependencies
+pypdf==4.0.0
+unstructured==0.12.0
 
 # AWS Bedrock Support
 boto3>=1.28.0
