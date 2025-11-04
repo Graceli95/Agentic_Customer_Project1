@@ -449,3 +449,349 @@ def test_chat_endpoint_normalizes_session_id_case():
             data = response.json()
             # Session ID should be returned in lowercase
             assert data["session_id"] == "550e8400-e29b-41d4-a716-446655440000"
+
+
+# ============================================================================
+# Phase 3: Multi-Agent Routing Integration Tests
+# ============================================================================
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_technical_query_to_worker():
+    """Test that technical queries are routed to technical support worker."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        # Mock supervisor agent
+        mock_supervisor = Mock()
+        
+        # Mock the result that includes tool call (indicating routing)
+        mock_user_msg = Mock()
+        mock_user_msg.content = "Error 500 when logging in"
+        mock_user_msg.type = "human"
+        
+        mock_tool_call_msg = Mock()
+        mock_tool_call_msg.type = "tool"
+        mock_tool_call_msg.name = "technical_support_tool"
+        
+        mock_response_msg = Mock()
+        mock_response_msg.content = "I understand you're experiencing Error 500. Here are troubleshooting steps..."
+        mock_response_msg.type = "ai"
+        
+        mock_supervisor.invoke.return_value = {
+            "messages": [mock_user_msg, mock_tool_call_msg, mock_response_msg]
+        }
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "Error 500 when logging in",
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        assert "response" in data
+        assert "session_id" in data
+        assert isinstance(data["response"], str)
+        assert len(data["response"]) > 0
+        
+        # Verify supervisor was invoked
+        mock_supervisor.invoke.assert_called_once()
+
+
+@pytest.mark.integration
+def test_chat_endpoint_handles_general_query_directly():
+    """Test that general queries are handled by supervisor without routing."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        # Mock supervisor agent
+        mock_supervisor = Mock()
+        
+        # Mock the result without tool calls (direct handling)
+        mock_user_msg = Mock()
+        mock_user_msg.content = "Hello! How are you?"
+        mock_user_msg.type = "human"
+        
+        mock_response_msg = Mock()
+        mock_response_msg.content = "Hello! I'm here to help you. How can I assist you today?"
+        mock_response_msg.type = "ai"
+        
+        mock_supervisor.invoke.return_value = {
+            "messages": [mock_user_msg, mock_response_msg]
+        }
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "Hello! How are you?",
+                "session_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        assert "response" in data
+        assert len(data["response"]) > 0
+        
+        # Verify supervisor was invoked
+        mock_supervisor.invoke.assert_called_once()
+        
+        # Verify no tool calls in response (only 2 messages: user + assistant)
+        call_args = mock_supervisor.invoke.call_args
+        assert call_args is not None
+
+
+@pytest.mark.integration
+def test_chat_endpoint_maintains_context_across_routing():
+    """Test that conversation context is maintained when routing to workers."""
+    from unittest.mock import patch, Mock
+
+    session_id = "550e8400-e29b-41d4-a716-446655440000"
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        
+        # First message - technical query
+        mock_msg1 = Mock()
+        mock_msg1.content = "Comprehensive troubleshooting response..."
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg1]}
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response1 = client.post(
+            "/chat",
+            json={"message": "Error 500 on login", "session_id": session_id},
+        )
+
+        assert response1.status_code == 200
+        
+        # Second message - follow-up
+        mock_msg2 = Mock()
+        mock_msg2.content = "Based on previous error, try these additional steps..."
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg2]}
+
+        response2 = client.post(
+            "/chat",
+            json={"message": "I tried that but still fails", "session_id": session_id},
+        )
+
+        assert response2.status_code == 200
+        
+        # Verify supervisor was called twice with same thread_id
+        assert mock_supervisor.invoke.call_count == 2
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_different_technical_queries():
+    """Test that various types of technical queries are handled correctly."""
+    from unittest.mock import patch, Mock
+
+    technical_queries = [
+        "Getting Error 404 not found",
+        "App keeps crashing on startup",
+        "Can't install the software",
+        "How do I configure the settings?",
+        "Performance is very slow",
+    ]
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_msg = Mock()
+        mock_msg.content = "Technical support response"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg]}
+        mock_get_supervisor.return_value = mock_supervisor
+
+        for query in technical_queries:
+            response = client.post(
+                "/chat",
+                json={
+                    "message": query,
+                    "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                },
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "response" in data
+            assert len(data["response"]) > 0
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_different_general_queries():
+    """Test that various types of general queries are handled correctly."""
+    from unittest.mock import patch, Mock
+
+    general_queries = [
+        "Hello!",
+        "Thank you for your help",
+        "Good morning",
+        "That makes sense",
+        "I appreciate it",
+    ]
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_msg = Mock()
+        mock_msg.content = "You're welcome!"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg]}
+        mock_get_supervisor.return_value = mock_supervisor
+
+        for query in general_queries:
+            response = client.post(
+                "/chat",
+                json={
+                    "message": query,
+                    "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                },
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "response" in data
+
+
+@pytest.mark.integration
+def test_chat_endpoint_handles_supervisor_initialization_error():
+    """Test that chat endpoint handles supervisor initialization errors gracefully."""
+    from unittest.mock import patch
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        # Simulate supervisor not initialized
+        mock_get_supervisor.side_effect = RuntimeError(
+            "Supervisor agent is not initialized"
+        )
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "Test query",
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+            },
+        )
+
+        assert response.status_code == 500
+        data = response.json()
+        assert "detail" in data
+        assert "error" in data["detail"]
+
+
+@pytest.mark.integration
+def test_chat_endpoint_handles_agent_invocation_error():
+    """Test that chat endpoint handles errors during agent invocation."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        # Simulate error during invoke
+        mock_supervisor.invoke.side_effect = Exception("API call failed")
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "Test query",
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+            },
+        )
+
+        assert response.status_code == 500
+        data = response.json()
+        assert "detail" in data
+
+
+@pytest.mark.integration
+def test_chat_endpoint_returns_proper_session_id():
+    """Test that chat endpoint returns the correct session_id in response."""
+    from unittest.mock import patch, Mock
+
+    test_session_id = "550e8400-e29b-41d4-a716-446655440000"
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_msg = Mock()
+        mock_msg.content = "Response"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg]}
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={"message": "Test", "session_id": test_session_id},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["session_id"] == test_session_id
+
+
+@pytest.mark.integration
+def test_chat_endpoint_passes_config_to_supervisor():
+    """Test that chat endpoint passes proper config with thread_id to supervisor."""
+    from unittest.mock import patch, Mock
+
+    session_id = "550e8400-e29b-41d4-a716-446655440000"
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_msg = Mock()
+        mock_msg.content = "Response"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg]}
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={"message": "Test", "session_id": session_id},
+        )
+
+        assert response.status_code == 200
+        
+        # Verify supervisor.invoke was called with config containing thread_id
+        mock_supervisor.invoke.assert_called_once()
+        call_args = mock_supervisor.invoke.call_args
+        
+        # Check that config was passed
+        assert len(call_args[0]) == 2  # (messages, config)
+        config = call_args[0][1]
+        assert "configurable" in config
+        assert "thread_id" in config["configurable"]
+        assert config["configurable"]["thread_id"] == session_id
+
+
+@pytest.mark.integration
+def test_chat_endpoint_extracts_last_message_content():
+    """Test that chat endpoint correctly extracts content from last message."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        
+        # Create multiple messages in result
+        mock_msg1 = Mock()
+        mock_msg1.content = "First message"
+        mock_msg2 = Mock()
+        mock_msg2.content = "Second message"
+        mock_msg3 = Mock()
+        mock_msg3.content = "Final response message"
+        
+        mock_supervisor.invoke.return_value = {
+            "messages": [mock_msg1, mock_msg2, mock_msg3]
+        }
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "Test",
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        # Should return content from last message
+        assert data["response"] == "Final response message"
