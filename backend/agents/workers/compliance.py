@@ -6,6 +6,7 @@ policy, regulatory, legal, and privacy questions. It's called as a tool
 by the supervisor agent using the tool-calling pattern.
 
 Phase: 4 - Additional Worker Agents
+Phase: 5 - RAG/CAG Integration (Pure CAG strategy)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
 Last Updated: November 4, 2025
@@ -15,6 +16,9 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 import os
 import logging
+
+# Import Pure CAG compliance context (loaded at module startup)
+from agents.tools.rag_tools import COMPLIANCE_CONTEXT
 
 logger = logging.getLogger(__name__)
 
@@ -59,8 +63,16 @@ def create_compliance_agent():
 
     logger.info("Creating compliance worker agent")
 
-    # System prompt: Defines compliance specialist role
-    system_prompt = """You are a Compliance specialist with expertise in policies, regulations, privacy, and legal matters.
+    # System prompt: Defines compliance specialist role with pre-loaded context (Pure CAG)
+    system_prompt = f"""You are a Compliance specialist with expertise in policies, regulations, privacy, and legal matters.
+
+COMPLIANCE DOCUMENTATION (Pre-loaded):
+{COMPLIANCE_CONTEXT}
+
+---
+
+IMPORTANT: Use ONLY the pre-loaded compliance documentation above to answer questions.
+Do NOT make up or infer policy information. Cite specific sections when relevant.
 
 Your role is to:
 - Explain terms of service and policies clearly
@@ -155,7 +167,7 @@ Be thorough, accurate, and provide complete policy information."""
     # Create compliance agent using LangChain v1.0 pattern
     agent = create_agent(
         model="openai:gpt-4o-mini",  # Cost-effective model
-        tools=[],  # No tools yet - Phase 5+ may add policy document search
+        tools=[],  # Pure CAG: NO tools - all context pre-loaded in system prompt
         system_prompt=system_prompt,
         checkpointer=None,  # No memory needed - called as tool, not directly
         name="compliance_agent",  # Required in LangChain v1.0

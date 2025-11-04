@@ -6,6 +6,7 @@ company info, service descriptions, FAQs, and general help. It's called as a too
 by the supervisor agent using the tool-calling pattern.
 
 Phase: 4 - Additional Worker Agents
+Phase: 5 - RAG/CAG Integration (Pure RAG strategy)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
 Last Updated: November 4, 2025
@@ -15,6 +16,9 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 import os
 import logging
+
+# Import RAG tool for general documentation search
+from agents.tools.rag_tools import general_docs_search
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +75,7 @@ Your role is to:
 - Direct users to appropriate resources and documentation
 - Handle general inquiries and frequently asked questions
 - Offer helpful tips and best practices
+- Use general_docs_search tool to find company and service information
 
 Information Areas You Cover:
 - Company background, mission, and values
@@ -165,7 +170,7 @@ Be helpful, informative, and guide them to success."""
     # Create general information agent using LangChain v1.0 pattern
     agent = create_agent(
         model="openai:gpt-4o-mini",  # Cost-effective model
-        tools=[],  # No tools yet - Phase 5+ may add knowledge base search
+        tools=[general_docs_search],  # Pure RAG: Search docs on every query
         system_prompt=system_prompt,
         checkpointer=None,  # No memory needed - called as tool, not directly
         name="general_info_agent",  # Required in LangChain v1.0

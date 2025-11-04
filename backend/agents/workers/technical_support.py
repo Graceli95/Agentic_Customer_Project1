@@ -6,15 +6,19 @@ technical queries, troubleshooting, errors, and bugs. It's called as a tool
 by the supervisor agent using the tool-calling pattern.
 
 Phase: 3 - Multi-Agent Supervisor Architecture
+Phase: 5 - RAG/CAG Integration (Pure RAG strategy)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
-Last Updated: November 3, 2025
+Last Updated: November 4, 2025
 """
 
 from langchain.agents import create_agent
 from langchain.tools import tool
 import os
 import logging
+
+# Import RAG tool for technical documentation search
+from agents.tools.rag_tools import technical_docs_search
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +36,7 @@ def create_technical_support_agent():
     - Explains error messages
     - Provides troubleshooting steps
     - Suggests solutions and workarounds
-    - No tools yet (Phase 5 will add RAG for technical docs)
+    - Uses Pure RAG to search technical documentation (Phase 5)
 
     Returns:
         Agent: Configured LangChain technical support agent
@@ -67,6 +71,7 @@ Your role is to:
 - Guide users through troubleshooting processes
 - Suggest preventive measures when appropriate
 - Ask clarifying questions when you need more information
+- Use technical_docs_search tool to find relevant documentation and solutions
 
 Technical Areas You Cover:
 - Software errors and error codes (500, 404, 403, etc.)
@@ -120,7 +125,7 @@ Make it thorough, helpful, and complete."""
     agent = create_agent(
         model="openai:gpt-4o-mini",  # Cost-effective model
         # To upgrade: model="openai:gpt-4o" for higher quality responses
-        tools=[],  # No tools yet - Phase 5 will add RAG search tool
+        tools=[technical_docs_search],  # Pure RAG: Search docs on every query
         system_prompt=system_prompt,
         checkpointer=None,  # No memory needed - called as tool, not directly
         # Each call is independent - supervisor maintains conversation context
