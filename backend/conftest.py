@@ -8,6 +8,7 @@ This file is automatically loaded by pytest and provides:
 """
 
 import pytest
+import os
 
 
 def pytest_addoption(parser):
@@ -26,6 +27,12 @@ def pytest_configure(config):
         "markers",
         "integration: Integration tests that may require external services (use --run-integration to run)",
     )
+    
+    # Set a fake API key for test collection/import time
+    # This prevents module-level agent initialization from failing
+    # Individual tests can override this with monkeypatch if needed
+    if "OPENAI_API_KEY" not in os.environ:
+        os.environ["OPENAI_API_KEY"] = "sk-test-fake-key-for-pytest-collection"
 
 
 def pytest_collection_modifyitems(config, items):

@@ -182,7 +182,7 @@ Each specialist is an expert in their domain - trust their responses."""
 # Phase 4: Register all 4 worker tools
 try:
     # Import all worker tools (relative import for backend package structure)
-    from agents.workers import (
+    from .workers import (
         technical_support_tool,  # Phase 3
         billing_support_tool,  # Phase 4
         compliance_tool,  # Phase 4
