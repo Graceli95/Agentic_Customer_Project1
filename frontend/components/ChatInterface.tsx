@@ -13,7 +13,12 @@
 import { useState } from 'react';
 import MessageList, { type Message } from './MessageList';
 import MessageInput from './MessageInput';
-import { sendChatMessage, formatErrorMessage } from '@/lib/api';
+import { 
+  sendChatMessage, 
+  sendChatMessageStream, 
+  formatErrorMessage,
+  type ChatStreamEvent 
+} from '@/lib/api';
 
 interface ChatInterfaceProps {
   /** Session ID for conversation continuity */
@@ -44,6 +49,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ sessionId, onClearSession }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [useStreaming, setUseStreaming] = useState(true); // Enable streaming by default
 
   /**
    * Generates a unique message ID
@@ -69,19 +75,77 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
     setIsLoading(true);
 
     try {
-      // Send message to backend
-      const response = await sendChatMessage(content, sessionId);
+      if (useStreaming) {
+        // Use streaming mode (SSE)
+        const assistantMessageId = generateMessageId();
+        let streamedContent = '';
 
-      // Create assistant message from response
-      const assistantMessage: Message = {
-        id: generateMessageId(),
-        content: response.response,
-        role: 'assistant',
-        timestamp: new Date(),
-      };
+        // Create placeholder assistant message
+        const assistantMessage: Message = {
+          id: assistantMessageId,
+          content: '',
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
 
-      // Add assistant response to conversation
-      setMessages((prev) => [...prev, assistantMessage]);
+        // Stream the response
+        await sendChatMessageStream(
+          content,
+          sessionId,
+          (event: ChatStreamEvent) => {
+            if (event.type === 'token' && 'content' in event) {
+              // Type guard: ensure event has content property
+              // Append token to streamed content
+              streamedContent += event.content;
+              
+              // Update the assistant message with accumulated content
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: streamedContent }
+                    : msg
+                )
+              );
+            }
+          },
+          () => {
+            // Stream complete
+            console.log('Streaming complete');
+          },
+          (error) => {
+            // Stream error
+            console.error('Streaming error:', error);
+            
+            // Update message to show error
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === assistantMessageId
+                  ? {
+                      ...msg,
+                      content: formatErrorMessage(error),
+                      role: 'error' as const,
+                    }
+                  : msg
+              )
+            );
+          }
+        );
+      } else {
+        // Use non-streaming mode (traditional)
+        const response = await sendChatMessage(content, sessionId);
+
+        // Create assistant message from response
+        const assistantMessage: Message = {
+          id: generateMessageId(),
+          content: response.response,
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+
+        // Add assistant response to conversation
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       // Handle errors gracefully
       console.error('Failed to send message:', error);
@@ -147,13 +211,19 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
           </div>
         </div>
 
-        {/* Clear conversation button */}
-        {messages.length > 0 && (
+        {/* Action buttons */}
+        <div className="flex items-center gap-2">
+          {/* Streaming toggle */}
           <button
-            onClick={handleClearConversation}
+            onClick={() => setUseStreaming(!useStreaming)}
             disabled={isLoading}
-            className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
-            aria-label="Clear conversation"
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+              useStreaming
+                ? 'border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+            } dark:focus:ring-offset-gray-900`}
+            aria-label={useStreaming ? 'Disable streaming' : 'Enable streaming'}
+            title={useStreaming ? 'Streaming enabled (real-time)' : 'Streaming disabled'}
           >
             <div className="flex items-center gap-2">
               <svg
@@ -163,17 +233,54 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
+                {useStreaming ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                )}
               </svg>
-              Clear
+              <span className="hidden sm:inline">{useStreaming ? 'Streaming' : 'Standard'}</span>
             </div>
           </button>
-        )}
+
+          {/* Clear conversation button */}
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearConversation}
+              disabled={isLoading}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
+              aria-label="Clear conversation"
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Clear</span>
+              </div>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages area */}
