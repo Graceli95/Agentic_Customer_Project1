@@ -6,60 +6,320 @@ FastAPI backend for the multi-agent customer service AI system powered by LangCh
 
 This backend provides REST API endpoints for an intelligent customer service system that uses AI agents powered by LangChain v1.0+ and OpenAI's GPT-4o-mini.
 
-**Current Phase: Phase 2 - Simple Agent Foundation** ✅
+**Current Phase: Phase 3 - Multi-Agent Supervisor Architecture** ✅
 
-Phase 2 implements a single conversational agent with memory management, providing a foundation for more complex multi-agent architectures in future phases.
+Phase 3 implements a supervisor agent that intelligently routes customer queries to specialized worker agents, enabling domain-specific expertise and better response quality.
 
 **Key Features:**
-- 🤖 Conversational AI agent with GPT-4o-mini
-- 💾 Session-based conversation memory (InMemorySaver)
-- 🔄 RESTful API with FastAPI
-- ✅ Comprehensive test coverage (37 tests passing)
-- 📊 LangSmith tracing support for debugging
+- 🎯 **Multi-Agent System** - Supervisor + specialized worker agents
+- 🔀 **Intelligent Routing** - Supervisor analyzes queries and delegates to appropriate workers
+- 🛠️ **Technical Support Worker** - Dedicated agent for troubleshooting and technical issues
+- 💾 **Session-based Memory** - Conversation history maintained across routing
+- 🔄 **RESTful API** with FastAPI
+- ✅ **Comprehensive Test Coverage** - 54 tests passing (44 unit + 10 integration)
+- 📊 **LangSmith Tracing** - Debug multi-agent interactions step-by-step
+- 📝 **Routing Visibility** - Detailed logging of supervisor decisions
 
 **Key Technologies:**
 - **FastAPI** - Modern, high-performance web framework
 - **LangChain v1.0+** - LLM application framework (using `create_agent`)
-- **LangGraph** - Agent orchestration with checkpointers
-- **OpenAI GPT-4o-mini** - Language model
+- **LangGraph** - Multi-agent orchestration with supervisor pattern
+- **OpenAI GPT-4o-mini** - Language model for all agents
 - **Pydantic** - Data validation and settings management
-- **Pytest** - Testing framework with 69% coverage
+- **Pytest** - Testing framework with 64% coverage
 
 ## Project Structure
 
 ```
 backend/
-├── agents/                  # Agent modules
-│   ├── __init__.py         # Exports get_agent()
-│   ├── simple_agent.py     # Phase 2: Customer service agent (✅)
-│   └── workers/            # Future: Specialized worker agents (Phase 3+)
-│       └── __init__.py
-├── data/                   # Data and documents
+├── agents/                           # Agent modules
+│   ├── __init__.py                  # Exports get_supervisor(), get_agent()
+│   ├── simple_agent.py              # Phase 2: Simple agent (reference/fallback)
+│   ├── supervisor_agent.py          # Phase 3: Supervisor agent with routing ✅
+│   └── workers/                     # Phase 3+: Specialized worker agents
+│       ├── __init__.py              # Exports worker agents and tools
+│       └── technical_support.py    # Technical support worker + tool ✅
+├── data/                            # Data and documents
 │   ├── __init__.py
-│   └── docs/              # Future: Document storage (Phase 5+)
-│       ├── billing/       # Billing-related documents
-│       ├── compliance/    # Compliance documents
-│       └── technical/     # Technical documentation
-├── tests/                  # Test suite
+│   └── docs/                       # Future: Document storage (Phase 5+)
+│       ├── billing/                # Billing-related documents
+│       ├── compliance/             # Compliance documents
+│       └── technical/              # Technical documentation
+├── tests/                           # Test suite
 │   ├── __init__.py
-│   ├── test_main.py       # API endpoint tests (27 tests ✅)
-│   └── test_agent.py      # Agent unit tests (10 tests ✅)
-├── utils/                  # Utility functions
+│   ├── test_main.py                # API endpoint tests (37 tests ✅)
+│   ├── test_agent.py               # Phase 2 agent tests (10 tests)
+│   ├── test_supervisor.py          # Supervisor unit tests (15 tests ✅)
+│   └── test_technical_worker.py    # Technical worker tests (19 tests ✅)
+├── utils/                           # Utility functions
 │   └── __init__.py
-├── main.py                 # FastAPI application with /chat endpoint (✅)
-├── conftest.py             # Pytest configuration and fixtures
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment variable template (✅)
-├── Dockerfile             # Container configuration
-├── pytest.ini             # Pytest configuration
-└── README.md              # This file
+├── main.py                          # FastAPI app with supervisor routing ✅
+├── conftest.py                      # Pytest configuration and fixtures
+├── requirements.txt                 # Python dependencies
+├── .env.example                    # Environment variable template
+├── test_routing_logs.sh            # Script to test routing visibility ✅
+├── Dockerfile                       # Container configuration
+├── pytest.ini                       # Pytest configuration
+└── README.md                        # This file
 ```
 
-**Phase 2 Status:** ✅ Complete
-- Simple agent with conversation memory
-- /chat endpoint with session management
-- Comprehensive test suite
-- LangSmith tracing support
+**Phase 3 Status:** ✅ Complete
+- Multi-agent supervisor architecture with intelligent routing
+- Technical support worker agent for troubleshooting
+- Tool-calling pattern (supervisor calls workers as tools)
+- Conversation memory maintained across routing
+- Enhanced logging with routing visibility (🔀 ROUTING, ✋ DIRECT)
+- 54 tests passing: 44 unit tests + 10 integration tests
+- LangSmith tracing shows multi-agent interactions
+
+## Multi-Agent Architecture (Phase 3)
+
+### Overview
+
+Phase 3 implements a **supervisor pattern** where a coordinator agent intelligently routes queries to specialized worker agents based on the query content. This enables domain-specific expertise and better response quality.
+
+**Architecture Diagram:**
+```
+User Query → FastAPI /chat Endpoint
+    ↓
+Supervisor Agent (Analyzes Query)
+    ↓
+    ├─→ [Technical Support Tool] → Technical Worker Agent → Response
+    │                                      ↓
+    └─→ [Direct Handling] ────────────→ Response
+```
+
+### How It Works
+
+1. **User sends query** to `/chat` endpoint with session_id
+2. **Supervisor agent analyzes** the query to understand intent
+3. **Routing decision**:
+   - **Technical queries** (errors, bugs, crashes) → Routes to Technical Support worker
+   - **General queries** (greetings, thanks, clarifications) → Handles directly
+4. **Response generation**:
+   - Worker agents provide specialized expertise
+   - Supervisor ensures complete response returned to user
+5. **Memory maintained** across routing via checkpointer + thread_id
+
+### Supervisor Agent
+
+**Location:** `backend/agents/supervisor_agent.py`
+
+**Role:** Coordinator that routes queries to appropriate workers
+
+**Key Features:**
+- Analyzes query intent using GPT-4o-mini
+- Routes technical queries to Technical Support worker tool
+- Handles general conversational queries directly
+- Maintains conversation memory with InMemorySaver checkpointer
+- Provides comprehensive final responses to users
+
+**System Prompt Strategy:**
+```python
+# Supervisor understands:
+# - When to route (technical issues) vs handle directly (general chat)
+# - How to use worker tools with complete context
+# - Importance of returning full responses to users
+```
+
+**Tool Configuration:**
+- Registered with `technical_support_tool`
+- Can be extended with additional worker tools (billing, compliance, etc.)
+
+### Technical Support Worker
+
+**Location:** `backend/agents/workers/technical_support.py`
+
+**Role:** Specialized agent for troubleshooting technical issues
+
+**Expertise:**
+- Software errors and bugs
+- Installation and configuration issues
+- Performance problems
+- Crashes and system failures
+- Diagnostic guidance and step-by-step solutions
+
+**Tool Wrapper:**
+```python
+@tool
+def technical_support_tool(query: str) -> str:
+    """Handle technical support questions including errors, bugs, crashes, and troubleshooting.
+    
+    Use this tool when users report:
+    - Error messages or error codes
+    - Application crashes or freezes  
+    - Installation or setup problems
+    - Configuration issues
+    - Performance problems
+    - "Not working" or "broken" functionality
+    """
+    # Invokes technical worker agent
+    # Returns complete response as string
+```
+
+**Key Features:**
+- Deep technical knowledge and troubleshooting methodology
+- Provides step-by-step solutions
+- Asks clarifying questions when needed
+- Maintains technical accuracy
+
+### Routing Logic
+
+The supervisor uses the **tool description** to decide when to call workers:
+
+**Routes to Technical Support Tool when query contains:**
+- Error messages (e.g., "Error 500", "404 not found")
+- Problem keywords (e.g., "not working", "broken", "fails", "crash")
+- Technical terms (e.g., "install", "configure", "setup", "performance")
+- Troubleshooting requests (e.g., "how do I fix", "can't access")
+
+**Handles directly when query is:**
+- Greetings (e.g., "Hello", "Hi there")
+- Gratitude (e.g., "Thank you", "Thanks")
+- Clarifications (e.g., "What do you mean?", "Can you explain?")
+- General conversation (e.g., "That makes sense", "I understand")
+
+**Routing Visibility:**
+
+The system logs routing decisions for debugging:
+
+```bash
+# Technical query routed to worker
+🔀 ROUTING: Query routed to worker agent (session: abc-123, time: 1.5s)
+
+# General query handled directly
+✋ DIRECT: Supervisor handled query directly (session: abc-123, time: 0.3s)
+```
+
+### Adding New Worker Agents
+
+Follow this pattern to add new specialized workers:
+
+**1. Create Worker Module** (`agents/workers/your_worker.py`):
+
+```python
+from langchain.agents import create_agent
+from langchain.tools import tool
+import logging
+
+logger = logging.getLogger(__name__)
+
+def create_your_worker_agent():
+    """Create specialized worker agent."""
+    system_prompt = """You are a specialist in [domain].
+    Your role is to...
+    
+    CRITICAL: The supervisor only sees your final message.
+    Include ALL results, findings, and details in your final response.
+    """
+    
+    agent = create_agent(
+        model="openai:gpt-4o-mini",
+        tools=[],  # Worker-specific tools if needed
+        system_prompt=system_prompt,
+        name="your_worker_agent",  # Descriptive name
+    )
+    
+    logger.info(f"Your worker agent created successfully")
+    return agent
+
+# Module-level singleton
+_agent_instance = None
+
+def get_your_worker():
+    """Get singleton instance of worker agent."""
+    global _agent_instance
+    if _agent_instance is None:
+        _agent_instance = create_your_worker_agent()
+    return _agent_instance
+
+# Tool wrapper for supervisor
+@tool
+def your_worker_tool(query: str) -> str:
+    """Handle [domain] questions.
+    
+    Use this tool when users ask about [specific topics].
+    Examples: [list examples]
+    """
+    logger.info(f"Your worker tool called with query: {query[:50]}...")
+    
+    agent = get_your_worker()
+    result = agent.invoke({"messages": [{"role": "user", "content": query}]})
+    response = result["messages"][-1].content
+    
+    logger.info(f"Your worker tool returning response: {response[:50]}...")
+    return response
+```
+
+**2. Export from Workers Package** (`agents/workers/__init__.py`):
+
+```python
+from agents.workers.your_worker import (
+    create_your_worker_agent,
+    get_your_worker,
+    your_worker_tool,  # Primary export for supervisor
+)
+
+__all__ = [
+    # ... existing exports ...
+    "create_your_worker_agent",
+    "get_your_worker", 
+    "your_worker_tool",
+]
+```
+
+**3. Register with Supervisor** (`agents/supervisor_agent.py`):
+
+```python
+from agents.workers import technical_support_tool, your_worker_tool
+
+# In create_supervisor_agent():
+tools = [
+    technical_support_tool,
+    your_worker_tool,  # Add your tool
+]
+
+system_prompt = """...
+3. Route [domain] questions to the Your Worker specialist
+...
+"""
+```
+
+**4. Write Tests** (`tests/test_your_worker.py`):
+
+```python
+import pytest
+from agents.workers.your_worker import (
+    create_your_worker_agent,
+    get_your_worker,
+    your_worker_tool,
+)
+
+@pytest.mark.unit
+def test_create_your_worker_agent():
+    """Test your worker agent creation."""
+    agent = create_your_worker_agent()
+    assert agent is not None
+    # ... more assertions ...
+```
+
+**5. Update Supervisor System Prompt** with routing guidelines for new worker.
+
+### Best Practices for Multi-Agent Systems
+
+**DO:**
+- ✅ Give each worker a clear, non-overlapping domain
+- ✅ Write specific tool descriptions to guide supervisor routing
+- ✅ Emphasize final output in worker system prompts
+- ✅ Test workers independently before integration
+- ✅ Use `ToolRuntime` to pass conversation context if needed
+- ✅ Monitor routing decisions with logging
+
+**DON'T:**
+- ❌ Overlap worker responsibilities (causes routing confusion)
+- ❌ Forget to remind workers that supervisor only sees final output
+- ❌ Skip testing individual workers (test before integration)
+- ❌ Use manual LangGraph for basic multi-agent (use supervisor pattern)
 
 ## Prerequisites
 
@@ -120,11 +380,11 @@ cp .env.example .env
 nano .env  # or use your preferred editor
 ```
 
-**Required Environment Variables (Phase 2):**
+**Required Environment Variables (Phase 3):**
 - `OPENAI_API_KEY` - **REQUIRED** - OpenAI API key for GPT-4o-mini
   - Get your key at: https://platform.openai.com/api-keys
   - Format: `sk-proj-...`
-  - Used by the customer service agent
+  - Used by supervisor and all worker agents
 
 **Optional Environment Variables:**
 - `LANGSMITH_TRACING` - Enable LangSmith tracing (`true`/`false`)
@@ -133,11 +393,11 @@ nano .env  # or use your preferred editor
 - `LANGSMITH_API_KEY` - LangSmith API key (if tracing enabled)
   - Get your key at: https://smith.langchain.com/settings
   - Format: `lsv2_...`
-- `LANGSMITH_PROJECT` - LangSmith project name (default: `customer-service-phase2`)
+- `LANGSMITH_PROJECT` - LangSmith project name (default: `customer-service-phase3`)
 - `ENVIRONMENT` - Environment name (`development`/`staging`/`production`)
 - `LOG_LEVEL` - Logging level (`DEBUG`/`INFO`/`WARNING`/`ERROR`)
 
-**Example `.env` file for Phase 2:**
+**Example `.env` file for Phase 3:**
 ```bash
 # OpenAI Configuration (REQUIRED)
 OPENAI_API_KEY=sk-proj-your-actual-key-here
@@ -145,7 +405,7 @@ OPENAI_API_KEY=sk-proj-your-actual-key-here
 # LangSmith Configuration (OPTIONAL but recommended)
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=lsv2_your-key-here
-LANGSMITH_PROJECT=customer-service-phase2
+LANGSMITH_PROJECT=customer-service-phase3
 
 # Application Configuration
 ENVIRONMENT=development
@@ -242,19 +502,73 @@ open htmlcov/index.html  # macOS
 ### Test Categories
 
 Tests are organized with markers:
-- `@pytest.mark.unit` - Fast, isolated unit tests
-- `@pytest.mark.integration` - Integration tests (may require external services)
+- `@pytest.mark.unit` - Fast, isolated unit tests (44 tests)
+- `@pytest.mark.integration` - Integration tests (10 tests, requires --run-integration flag)
 - `@pytest.mark.slow` - Slow-running tests
 
 ```bash
-# Run only unit tests
+# Run only unit tests (fast, no API calls)
 pytest -m unit
 
-# Run only integration tests
-pytest -m integration
+# Run integration tests (with mocked supervisor)
+pytest -m integration --run-integration
+
+# Run all tests including integration
+pytest --run-integration
 
 # Skip slow tests
 pytest -m "not slow"
+```
+
+**Phase 3 Test Suite:**
+- **test_supervisor.py** - 15 unit tests for supervisor agent
+- **test_technical_worker.py** - 19 unit tests for technical worker
+- **test_main.py** - 37 total tests (27 endpoint + 10 integration routing tests)
+- **Total**: 54 tests, all passing ✅
+
+### Testing Multi-Agent Routing
+
+**Manual Test Script:**
+
+Use the provided script to test routing decisions with real API calls:
+
+```bash
+# Make script executable
+chmod +x test_routing_logs.sh
+
+# Run the test script (requires backend server running)
+./test_routing_logs.sh
+```
+
+The script sends both technical and general queries, showing routing decisions in logs:
+- Technical queries show `🔀 ROUTING` indicator (routed to worker)
+- General queries show `✋ DIRECT` indicator (handled by supervisor)
+
+**Example Manual Test (with curl):**
+
+```bash
+# Start backend server in one terminal
+uvicorn main:app --reload
+
+# In another terminal, test technical query (should route)
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Getting Error 500 when trying to log in",
+    "session_id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+
+# Check logs - should see: 🔀 ROUTING: Query routed to worker agent
+
+# Test general query (should handle directly)
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Hello! How are you?",
+    "session_id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+
+# Check logs - should see: ✋ DIRECT: Supervisor handled query directly
 ```
 
 ## Docker Usage
@@ -337,11 +651,11 @@ Returns API information and links to documentation.
 }
 ```
 
-#### Chat Endpoint (Phase 2) 🆕
+#### Chat Endpoint (Phase 3) 🚀
 ```
 POST /chat
 ```
-Send a message to the AI customer service agent. The agent maintains conversation history based on the session ID.
+Send a message to the AI customer service system. The supervisor agent intelligently routes your query to specialized workers or handles it directly, maintaining conversation history based on the session ID.
 
 **Request Body:**
 ```json
@@ -431,22 +745,37 @@ data = response.json()
 print(f"AI: {data['response']}")
 ```
 
-**Conversation Memory:**
-The agent remembers the conversation history for each session_id. Use the same session_id for follow-up messages to maintain context.
+**Conversation Memory & Routing:**
+The supervisor maintains conversation history for each session_id, even across routing to different workers. Use the same session_id for follow-up messages to maintain context.
+
+**Example - Technical Query with Routing:**
 
 ```python
-# First message
+# Technical query - routed to Technical Support worker
 response1 = requests.post("http://localhost:8000/chat", json={
-    "message": "My name is Alice",
-    "session_id": "abc-123"
+    "message": "Getting Error 500 when logging in",
+    "session_id": "550e8400-e29b-41d4-a716-446655440000"
 })
+# Response from Technical Support worker with troubleshooting steps
+# Log shows: 🔀 ROUTING: Query routed to worker agent
 
-# Second message - agent remembers "Alice"
+# Follow-up - context maintained across routing
 response2 = requests.post("http://localhost:8000/chat", json={
-    "message": "What is my name?",
-    "session_id": "abc-123"  # Same session_id
+    "message": "I tried that but still not working",
+    "session_id": "550e8400-e29b-41d4-a716-446655440000"  # Same session
 })
-# Response: "Your name is Alice."
+# Worker remembers previous steps and provides next troubleshooting options
+```
+
+**Example - General Query (Direct Handling):**
+```python
+# General greeting - handled directly by supervisor
+response = requests.post("http://localhost:8000/chat", json={
+    "message": "Hello! How are you?",
+    "session_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde"
+})
+# Response from supervisor directly (no routing needed)
+# Log shows: ✋ DIRECT: Supervisor handled query directly
 ```
 
 #### Interactive Documentation
@@ -499,13 +828,24 @@ async def handle_query(request: QueryRequest):
     return QueryResponse(response="...")
 ```
 
-### Adding New Agents
+### Adding New Worker Agents (Phase 3+)
 
-1. Create agent module in `agents/workers/`
-2. Use LangChain v1.0 `create_agent()` helper
-3. Define tools with `@tool` decorator
-4. Write unit tests for the agent
-5. Document agent purpose and usage
+See the detailed "Adding New Worker Agents" section in the Multi-Agent Architecture documentation above for a complete guide. Summary:
+
+1. Create worker module in `agents/workers/your_worker.py`
+2. Use `create_agent()` with specialized system prompt
+3. Create `@tool` wrapper function for supervisor integration
+4. Export from `agents/workers/__init__.py`
+5. Register tool with supervisor in `supervisor_agent.py`
+6. Update supervisor system prompt with routing guidelines
+7. Write comprehensive unit tests (`tests/test_your_worker.py`)
+8. Test independently before integration
+
+**Key Pattern:**
+- Worker agents provide specialized expertise
+- Tool wrappers enable supervisor integration
+- Clear tool descriptions guide routing decisions
+- Workers return complete responses (supervisor only sees final message)
 
 ### LangChain v1.0 Best Practices
 
@@ -635,29 +975,41 @@ For questions or issues:
 
 ---
 
-## Phase 2 Completion Status
+## Phase 3 Completion Status
 
-**✅ Phase 2 Complete** - Simple Agent Foundation
+**✅ Phase 3 Complete** - Multi-Agent Supervisor Architecture
 
 **What's Included:**
-- Single conversational agent with GPT-4o-mini
-- Session-based conversation memory (InMemorySaver)
-- RESTful `/chat` endpoint
-- Comprehensive test suite (37 tests passing, 69% coverage)
-- LangSmith tracing support
-- Error handling and validation
+- **Supervisor Agent** - Intelligent query routing coordinator
+- **Technical Support Worker** - Specialized troubleshooting agent
+- **Tool-Calling Pattern** - Workers wrapped as supervisor tools
+- **Intelligent Routing** - Analyzes intent, routes to appropriate worker
+- **Conversation Memory** - Maintained across routing via checkpointer
+- **Routing Visibility** - Detailed logging (🔀 ROUTING, ✋ DIRECT indicators)
+- **Comprehensive Tests** - 54 tests passing (44 unit + 10 integration), 64% coverage
+- **LangSmith Support** - Multi-agent interaction tracing
+- **Extensible Architecture** - Easy to add new worker agents
+
+**Architecture:**
+```
+User → /chat Endpoint → Supervisor Agent
+                            ↓
+                    ├─→ Technical Support Tool → Worker Agent
+                    └─→ Direct Handling
+                            ↓
+                        Response to User
+```
 
 **What's Next:**
-- **Phase 3**: Multi-agent architecture with supervisor pattern
-- **Phase 4**: Specialized worker agents (technical, billing, compliance)
-- **Phase 5**: RAG/CAG with document retrieval
-- **Phase 6**: AWS Bedrock integration and streaming
+- **Phase 4**: Additional worker agents (billing, compliance, general info)
+- **Phase 5**: RAG/CAG with document retrieval for knowledge base
+- **Phase 6**: AWS Bedrock integration and streaming responses
 
 ---
 
-**Version**: 1.0.0 (Phase 2)  
-**Last Updated**: November 3, 2025  
+**Version**: 1.0.0 (Phase 3)  
+**Last Updated**: November 4, 2025  
 **LangChain Version**: 1.0+  
-**Test Coverage**: 69%  
+**Test Coverage**: 64% (54 tests passing)  
 **Status**: ✅ Production Ready
 
