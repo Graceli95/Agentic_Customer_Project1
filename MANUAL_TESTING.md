@@ -1,6 +1,6 @@
-# Manual Testing Guide - Phase 2: Simple Agent Foundation
+# Manual Testing Guide - Phase 3: Multi-Agent Supervisor Architecture
 
-This guide provides step-by-step instructions for manually testing the customer service AI application.
+This guide provides step-by-step instructions for manually testing the customer service AI application with multi-agent routing capabilities.
 
 ## 📋 Prerequisites
 
@@ -27,10 +27,10 @@ Edit `.env` and add your OpenAI API key:
 ```bash
 OPENAI_API_KEY=sk-proj-your-actual-key-here
 
-# Optional: Enable LangSmith tracing for debugging
+# Optional: Enable LangSmith tracing for debugging multi-agent interactions
 LANGSMITH_TRACING=true
 LANGSMITH_API_KEY=lsv2_your-key-here
-LANGSMITH_PROJECT=customer-service-phase2
+LANGSMITH_PROJECT=customer-service-phase3
 ```
 
 ### 2. Start Backend Server
@@ -293,7 +293,306 @@ AI: Your name is Alice.
 
 ---
 
-### Test 10: Multi-turn Conversation ✅
+## 🔀 Phase 3: Multi-Agent Routing Tests
+
+These tests verify the supervisor agent's intelligent routing to specialized workers.
+
+### Test 10: Technical Query Routing ✅
+
+**Purpose:** Verify technical queries route to Technical Support worker
+
+**Steps:**
+1. Start fresh session
+2. Type: `Getting Error 500 when trying to log in`
+3. Wait for response
+4. **Check backend logs** for routing indicator
+
+**Expected Results:**
+- ✅ AI provides technical troubleshooting response
+- ✅ Response includes diagnostic steps
+- ✅ Backend logs show: `🔀 ROUTING: Query routed to worker agent`
+- ✅ Response is detailed and technical in nature
+
+**Example Response:**
+```
+"I understand you're experiencing an Error 500 (Internal Server Error) when trying to log in. Let's troubleshoot this step by step:
+
+1. First, try clearing your browser cache and cookies
+2. Check if the issue persists in incognito/private mode
+3. Verify your credentials are correct
+4. Try a different browser
+5. Check if the service is available at [status page]
+
+If none of these steps resolve the issue, please provide:
+- What browser are you using?
+- Did this start suddenly or after a recent update?
+- Do you see any error messages in the console?"
+```
+
+---
+
+### Test 11: General Query Direct Handling ✅
+
+**Purpose:** Verify general queries handled directly by supervisor
+
+**Steps:**
+1. Continue from Test 10 (same session)
+2. Type: `Thank you for your help!`
+3. Wait for response
+4. **Check backend logs** for routing indicator
+
+**Expected Results:**
+- ✅ AI provides friendly acknowledgment
+- ✅ Backend logs show: `✋ DIRECT: Supervisor handled query directly`
+- ✅ Response is conversational, not technical
+- ✅ No routing to worker occurred
+
+**Example Response:**
+```
+"You're welcome! I'm glad I could help. If you continue to have issues or need any other assistance, please don't hesitate to ask!"
+```
+
+---
+
+### Test 12: Routing with Context Maintenance ✅
+
+**Purpose:** Verify context maintained across routing decisions
+
+**Steps:**
+1. Continue from Test 11 (same session with login error discussed)
+2. Type: `I tried clearing cache but still getting the error`
+3. Wait for response
+4. Check logs for routing
+
+**Expected Results:**
+- ✅ AI routes to Technical Support again (technical follow-up)
+- ✅ Logs show: `🔀 ROUTING`
+- ✅ Worker remembers context (previous error 500, cache clearing)
+- ✅ Response builds on previous troubleshooting steps
+
+**Example Response:**
+```
+"I see you've already tried clearing the cache but the Error 500 persists. Let's try these additional steps:
+
+1. Check your browser's console for more specific error details (F12 → Console tab)
+2. Try accessing the login page directly via [URL]
+3. Test your network connection
+4. Verify the login endpoint is responding: [test URL]
+
+Since basic troubleshooting hasn't resolved it, this may be a server-side issue. Can you tell me:
+- What time did the error start occurring?
+- Are other users reporting similar issues?"
+```
+
+---
+
+### Test 13: Mixed Query Type Conversation ✅
+
+**Purpose:** Verify supervisor handles mixed technical and general queries
+
+**Steps:**
+1. Start fresh session
+2. Type: `Hello! I need some help`
+3. Wait for response (should be direct)
+4. Type: `My app keeps crashing on startup`
+5. Wait for response (should route)
+6. Type: `That's frustrating`
+7. Wait for response (should be direct)
+8. Type: `What logs should I check?`
+9. Wait for response (should route)
+
+**Expected Results:**
+- ✅ Step 2: Direct handling (general greeting)
+- ✅ Step 4: Routes to Technical Support (technical issue)
+- ✅ Step 6: Direct handling (emotional response)
+- ✅ Step 8: Routes to Technical Support (technical question)
+- ✅ Context maintained throughout mixed conversation
+- ✅ Appropriate routing decisions for each query type
+
+**Logs should show:**
+```
+✋ DIRECT: Supervisor handled query directly (Hello)
+🔀 ROUTING: Query routed to worker agent (crashing)
+✋ DIRECT: Supervisor handled query directly (frustrating)
+🔀 ROUTING: Query routed to worker agent (logs)
+```
+
+---
+
+### Test 14: Different Technical Query Types ✅
+
+**Purpose:** Verify routing works for various technical issues
+
+**Test multiple technical queries (fresh session for each):**
+
+| Query | Expected Routing | Expected Response Type |
+|-------|-----------------|----------------------|
+| "Error 404 not found" | 🔀 ROUTING | Troubleshooting steps |
+| "Can't install the software" | 🔀 ROUTING | Installation guidance |
+| "Performance is very slow" | 🔀 ROUTING | Performance diagnosis |
+| "Getting timeout errors" | 🔀 ROUTING | Network troubleshooting |
+| "App won't start" | 🔀 ROUTING | Startup diagnostics |
+
+**For each query:**
+1. Start fresh session
+2. Send query
+3. Verify logs show `🔀 ROUTING`
+4. Verify response is technical and detailed
+
+---
+
+### Test 15: Boundary Cases - Routing Decisions ✅
+
+**Purpose:** Test edge cases in routing logic
+
+**Test these ambiguous queries:**
+
+**Test 15a: Ambiguous Query**
+- Query: `How do I use this?`
+- Expected: Could route or handle directly (context-dependent)
+- Verify: Response is helpful regardless of routing
+
+**Test 15b: Question About Troubleshooting**
+- Query: `Can you help me troubleshoot?`
+- Expected: May route to Technical Support
+- Verify: Appropriate routing based on context
+
+**Test 15c: Generic Help Request**
+- Query: `I need help`
+- Expected: Likely direct handling (needs more info)
+- Verify: AI asks clarifying questions
+
+**Test 15d: Technical Term in General Context**
+- Query: `I love how fast the installation was!`
+- Expected: Direct handling (positive feedback, not a problem)
+- Verify: Logs show `✋ DIRECT`
+
+---
+
+### Test 16: Routing Visibility in Logs ✅
+
+**Purpose:** Verify routing indicators appear correctly in logs
+
+**Steps:**
+1. Keep backend terminal visible (Terminal 1)
+2. Run test script: `cd backend && ./test_routing_logs.sh`
+3. Observe log output
+
+**Expected Log Output:**
+```
+# Technical queries show:
+🔀 ROUTING: Query routed to worker agent (session: xxx, time: X.XXs)
+
+# General queries show:
+✋ DIRECT: Supervisor handled query directly (session: xxx, time: X.XXs)
+```
+
+**Verify:**
+- ✅ Routing indicators appear for every query
+- ✅ Session ID is logged
+- ✅ Execution time is logged
+- ✅ Indicators are clearly visible (emoji + text)
+
+---
+
+### Test 17: Session Persistence with Routing ✅
+
+**Purpose:** Verify session persists across routing and page refreshes
+
+**Steps:**
+1. Start fresh session
+2. Type: `Getting Error 500 on login` (technical - routes)
+3. Note Session ID in header
+4. **Refresh page** (Cmd+R / Ctrl+R)
+5. Check Session ID matches
+6. Type: `What was my error?`
+
+**Expected Results:**
+- ✅ Session ID unchanged after refresh
+- ✅ AI remembers "Error 500 on login"
+- ✅ May route again based on context
+- ✅ Conversation history maintained on backend
+
+---
+
+### Test 18: Clear Session with Routing History ✅
+
+**Purpose:** Verify clear conversation works after routing
+
+**Steps:**
+1. Have conversation with routing (technical query)
+2. Note routing occurred in logs
+3. Click **"Clear Chat"** button
+4. Type: `What was I asking about?`
+
+**Expected Results:**
+- ✅ New Session ID generated
+- ✅ AI doesn't remember previous conversation
+- ✅ Routing still works for new queries
+- ✅ Clean slate confirmed
+
+**Example Response:**
+```
+"I don't have any previous context. How can I help you today?"
+```
+
+---
+
+### Test 19: Multi-turn Technical Conversation ✅
+
+**Purpose:** Verify extended technical troubleshooting maintains context
+
+**Steps:**
+1. Start fresh session
+2. Have 5+ turn technical troubleshooting conversation
+
+**Example Conversation:**
+```
+User: My app crashes on startup
+AI: [Routes → Technical troubleshooting response]
+
+User: I checked the logs and see "memory error"
+AI: [Routes → Memory-specific guidance]
+
+User: I increased memory allocation but still crashes
+AI: [Routes → Advanced diagnostics]
+
+User: Where can I find the crash dumps?
+AI: [Routes → File location guidance]
+
+User: Thanks, I found them!
+AI: [Direct → Acknowledgment]
+```
+
+**Expected Results:**
+- ✅ Appropriate routing for each technical question
+- ✅ Direct handling for non-technical responses
+- ✅ Full context maintained throughout
+- ✅ Technical worker provides consistent, building advice
+
+---
+
+### Test 20: Performance - Routing Overhead ✅
+
+**Purpose:** Verify routing doesn't significantly impact response time
+
+**Steps:**
+1. Time several queries with routing
+2. Time several queries with direct handling
+3. Compare response times
+
+**Expected Results:**
+- ✅ Technical queries (with routing): 1-3 seconds
+- ✅ General queries (direct): 0.5-2 seconds
+- ✅ Routing overhead: < 1 second difference
+- ✅ No significant performance degradation
+- ✅ Times are logged in routing indicators
+
+**Note:** Response times depend on OpenAI API latency and query complexity.
+
+---
+
+### Test 21: Multi-turn Conversation ✅
 
 **Purpose:** Verify extended conversations work smoothly
 
@@ -330,6 +629,8 @@ AI: [Pricing information]
 
 Use this checklist to track testing progress:
 
+### Phase 2: Core Functionality Tests
+
 | Test | Description | Status | Notes |
 |------|-------------|--------|-------|
 | 1 | Basic Interaction | ⬜ | |
@@ -342,7 +643,23 @@ Use this checklist to track testing progress:
 | 7b | Invalid API Key Error | ⬜ | |
 | 8 | Loading States | ⬜ | |
 | 9 | UI/UX Visual Polish | ⬜ | |
-| 10 | Multi-turn Conversation | ⬜ | |
+
+### Phase 3: Multi-Agent Routing Tests
+
+| Test | Description | Status | Notes |
+|------|-------------|--------|-------|
+| 10 | Technical Query Routing | ⬜ | |
+| 11 | General Query Direct Handling | ⬜ | |
+| 12 | Routing with Context Maintenance | ⬜ | |
+| 13 | Mixed Query Type Conversation | ⬜ | |
+| 14 | Different Technical Query Types | ⬜ | |
+| 15a-d | Boundary Cases - Routing Decisions | ⬜ | |
+| 16 | Routing Visibility in Logs | ⬜ | |
+| 17 | Session Persistence with Routing | ⬜ | |
+| 18 | Clear Session with Routing History | ⬜ | |
+| 19 | Multi-turn Technical Conversation | ⬜ | |
+| 20 | Performance - Routing Overhead | ⬜ | |
+| 21 | Multi-turn Conversation | ⬜ | |
 
 **Legend:** ⬜ Not Tested | ✅ Passed | ❌ Failed | ⚠️ Issues Found
 
@@ -406,6 +723,54 @@ Use this checklist to track testing progress:
 
 ---
 
+### Routing indicators not appearing in logs (Phase 3)
+
+**Cause:** LOG_LEVEL too high or old backend version
+
+**Solution:**
+1. Check `backend/.env` has `LOG_LEVEL=INFO` or `LOG_LEVEL=DEBUG`
+2. Verify you're running Phase 3 code (check for `supervisor_agent.py`)
+3. Restart backend server
+4. Check logs show `🔀 ROUTING` or `✋ DIRECT` indicators
+
+---
+
+### All queries routing to worker (Phase 3)
+
+**Cause:** Supervisor prompt issue or worker tool description too broad
+
+**Solution:**
+1. Verify supervisor system prompt in `backend/agents/supervisor_agent.py`
+2. Check technical_support_tool description is specific
+3. Restart backend to reload agent definitions
+4. Test with clear general query: "Hello!"
+
+---
+
+### No routing occurring (Phase 3)
+
+**Cause:** Supervisor not using tools or tool not registered
+
+**Solution:**
+1. Verify `technical_support_tool` is imported and registered with supervisor
+2. Check supervisor was created with tools list
+3. Enable LangSmith tracing to see tool calls
+4. Check backend logs for agent initialization messages
+
+---
+
+### Context not maintained across routing
+
+**Cause:** Different thread_id or checkpointer issue
+
+**Solution:**
+1. Verify same session_id used across requests
+2. Check InMemorySaver is configured in supervisor
+3. Verify `thread_id` in config matches `session_id`
+4. Check backend logs show consistent thread_id
+
+---
+
 ## 📝 Reporting Issues
 
 When reporting issues, include:
@@ -449,12 +814,16 @@ _________________________________________________
 
 1. **Document any issues found** in GitHub Issues
 2. **Update this guide** with any new edge cases discovered
-3. **Mark Task 5.3 complete** in task list
-4. **Proceed to Phase 3** (Multi-agent architecture) if all tests pass
+3. **Mark Task 6.3 complete** in task list
+4. **Proceed to Phase 4** (Additional worker agents) if all tests pass
 
 ---
 
 **Testing Complete!** 🎉
 
-If all tests pass, Phase 2 is ready for deployment and we can move to Phase 3: Multi-Agent Architecture.
+If all Phase 3 tests pass:
+- Multi-agent routing is working correctly
+- Supervisor intelligently delegates to workers
+- Context is maintained across routing
+- System is ready for Phase 4: Additional Worker Agents (Billing, Compliance, General Info)
 
