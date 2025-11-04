@@ -80,11 +80,13 @@
   - Fixed import to use relative import (agents vs backend.agents)
   - Same /chat endpoint logic maintained (fully compatible)
 
-- [ ] 3.2 Add routing logging to track agent decisions
-  - Log when supervisor routes to technical worker
-  - Log when supervisor handles directly
-  - Use existing logging infrastructure
-  - Branch: `feat/phase3-3.2-add-routing-logging`
+- [x] 3.2 Add routing logging to track agent decisions (branch: feat/phase3-3.2-add-routing-logging)
+  - Added routing decision logging in main.py
+  - Logs when supervisor routes to technical worker (🔀 ROUTING)
+  - Logs when supervisor handles directly (✋ DIRECT)
+  - Tracks execution time for performance monitoring
+  - Created test_routing_logs.sh script for testing
+  - Uses existing logging infrastructure with emoji indicators
 
 ### 4.0 Testing: Unit Tests
 - [ ] 4.1 Create `backend/tests/test_supervisor.py` with supervisor unit tests

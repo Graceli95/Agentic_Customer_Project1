@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 import os
 import logging
 import re
+import time
 
 # Import LangChain agent (Phase 3: using supervisor for multi-agent routing)
 from agents import get_supervisor
@@ -321,17 +322,39 @@ async def chat_endpoint(request: ChatRequest):
         # The agent will:
         # 1. Load conversation history for this thread_id
         # 2. Process the new message with full context
-        # 3. Generate a response using GPT-4o-mini
-        # 4. Save the updated conversation to memory
-        logger.info(f"Invoking agent for session: {request.session_id}")
+        # 3. Decide whether to route to worker or handle directly
+        # 4. Generate a response using GPT-4o-mini
+        # 5. Save the updated conversation to memory
+        logger.info(f"Invoking supervisor agent for session: {request.session_id}")
+        logger.info(f"Query: '{request.message}'")
 
+        # Track routing decision by checking for tool calls in the result
+        start_time = time.time()
         result = agent.invoke(
             {"messages": [{"role": "user", "content": request.message}]}, config
         )
+        elapsed_time = time.time() - start_time
 
         # Extract the agent's response from the result
         # The last message in the conversation is the agent's response
         response_text = result["messages"][-1].content
+
+        # Analyze routing: Check if any tool was called
+        tool_called = any(
+            msg.get("type") == "tool" or msg.get("role") == "tool"
+            for msg in result["messages"]
+        )
+
+        if tool_called:
+            logger.info(
+                f"🔀 ROUTING: Query routed to worker agent "
+                f"(session: {request.session_id}, time: {elapsed_time:.2f}s)"
+            )
+        else:
+            logger.info(
+                f"✋ DIRECT: Supervisor handled query directly "
+                f"(session: {request.session_id}, time: {elapsed_time:.2f}s)"
+            )
 
         logger.info(f"Agent response generated for session: {request.session_id}")
         logger.debug(f"Response: {response_text[:50]}...")  # Log first 50 chars
