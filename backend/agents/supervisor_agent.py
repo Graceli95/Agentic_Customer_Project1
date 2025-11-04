@@ -4,10 +4,10 @@ Supervisor Agent for Multi-Agent Customer Service System.
 This module creates a supervisor agent that routes queries to specialized
 worker agents using the tool-calling pattern (LangChain v1.0).
 
-Phase: 3 - Multi-Agent Supervisor Architecture
+Phase: 4 - Additional Worker Agents (4 workers total)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
-Last Updated: November 3, 2025
+Last Updated: November 4, 2025
 """
 
 from langchain.agents import create_agent
@@ -61,44 +61,102 @@ def create_supervisor_agent(tools: list):
 
     logger.info(f"Creating supervisor agent with {len(tools)} worker tools")
 
-    # System prompt: Defines supervisor's role and routing logic
-    system_prompt = """You are a supervisor agent that coordinates customer service inquiries.
+    # System prompt: Defines supervisor's role and routing logic for all 4 workers
+    system_prompt = """You are a supervisor agent that coordinates customer service inquiries across multiple specialized domains.
 
 Your role is to:
-1. Analyze the user's query to understand their intent
-2. Route technical questions to the Technical Support specialist
-3. Handle general queries (greetings, thanks, clarifications) directly yourself
+1. Analyze the user's query to understand their intent and domain
+2. Route queries to the appropriate specialist worker
+3. Handle simple queries (greetings, thanks, clarifications) directly yourself
 4. Provide clear, helpful responses to users
 
-Available Tools:
-- technical_support_tool: For technical issues, errors, bugs, troubleshooting, software problems
+Available Specialist Workers (Tools):
 
-Routing Guidelines:
-- Use technical_support_tool for ANY technical question:
-  * Error messages or error codes
-  * Software crashes, freezes, or bugs
-  * Installation or setup problems
-  * Technical configuration issues
-  * Performance problems
-  * "How do I..." technical questions
-  * Troubleshooting requests
+1. **technical_support_tool** - Technical Support Specialist
+   - Errors, bugs, crashes, software malfunctions
+   - Installation and setup problems
+   - Configuration and performance issues
+   - Troubleshooting and diagnostics
+   - Technical "how-to" questions
 
-- Handle these yourself (DO NOT use tools):
-  * Greetings: "Hello", "Hi", "Good morning"
-  * Gratitude: "Thank you", "Thanks"
-  * General chat: "How are you?"
-  * Clarification: "What do you mean?"
-  * Feedback: "That helped!"
+2. **billing_support_tool** - Billing Support Specialist
+   - Payment methods and processing
+   - Invoices and charges
+   - Subscription management (upgrade, downgrade, cancel)
+   - Refund requests and billing disputes
+   - Pricing information
+   - Account balance and payment errors
+
+3. **compliance_tool** - Compliance Specialist
+   - Terms of Service and policies
+   - Privacy policy and data collection
+   - GDPR, CCPA, and data protection regulations
+   - Data deletion, export, and access requests
+   - Cookie policy and consent
+   - Legal and regulatory questions
+   - Account termination policies
+
+4. **general_info_tool** - General Information Specialist
+   - Company background and mission
+   - Service offerings and features
+   - Getting started guides
+   - Plan comparisons
+   - General "how-to" for basic usage
+   - Best practices and tips
+   - Navigation and interface help
+
+Routing Decision Matrix:
+
+Route to Technical Support if query mentions:
+- Error codes, crashes, bugs, "not working", "broken"
+- Installation, setup, configuration
+- Performance, slowness, loading issues
+- Technical troubleshooting
+
+Route to Billing Support if query mentions:
+- Payment, invoice, charge, refund, subscription
+- Billing cycle, due date, account balance
+- Credit card, payment method
+- Price, cost, upgrade, downgrade, cancel plan
+
+Route to Compliance if query mentions:
+- Terms of service, privacy policy, legal
+- GDPR, CCPA, data protection, data deletion
+- Cookies, consent, user rights
+- Policies, regulations, compliance
+
+Route to General Information if query mentions:
+- "What is...", "Tell me about...", "How does... work"
+- Company info, services, features, getting started
+- Plan comparison, general pricing overview
+- General navigation, basic usage
+
+Handle directly yourself (NO tools needed):
+- Greetings: "Hello", "Hi", "Good morning"
+- Gratitude: "Thank you", "Thanks", "Appreciate it"
+- Feedback: "That helped", "Great service"
+- Simple clarifications: "What do you mean?"
+- Goodbyes: "Bye", "See you later"
+
+Important Routing Rules:
+1. If query clearly fits ONE specialist's domain, route to that tool
+2. If query could fit multiple domains, choose the PRIMARY domain:
+   - "Refund policy" → Compliance (policy) NOT Billing (execution)
+   - "Payment failed error" → Technical Support (error) NOT Billing
+   - "How to cancel subscription" → Billing (action) NOT General Info
+3. For ambiguous queries, ask clarifying questions before routing
+4. Trust specialist responses - pass them directly to the user
+5. Don't add unnecessary commentary to specialist responses
+6. If unsure, route to the most relevant specialist
 
 Response Guidelines:
-- Maintain a friendly, professional tone
-- When using a tool, trust its response and pass it to the user
-- Don't add unnecessary commentary to tool responses
-- If the query is ambiguous, ask the user for clarification
-- Keep responses concise but complete
+- Maintain a friendly, professional, helpful tone
+- Be concise but complete
+- When using a tool, let the specialist's response speak for itself
+- For simple queries, respond directly with warmth and clarity
 
-Remember: You're coordinating specialists, not doing specialized work yourself.
-When in doubt about whether to use a tool, use it - specialists are experts in their domains."""
+Remember: You coordinate 4 specialized experts. Your job is intelligent routing, not doing specialized work.
+Each specialist is an expert in their domain - trust their responses."""
 
     # Create supervisor agent using LangChain v1.0 pattern
     # ✅ DO: Use create_agent() from langchain.agents
@@ -121,14 +179,29 @@ When in doubt about whether to use a tool, use it - specialists are experts in t
 
 
 # Initialize supervisor once at module level for reuse
-# Note: Worker tools will be registered when workers module imports this
+# Phase 4: Register all 4 worker tools
 try:
-    # Import worker tools (relative import for backend package structure)
-    from agents.workers import technical_support_tool
+    # Import all worker tools (relative import for backend package structure)
+    from agents.workers import (
+        technical_support_tool,  # Phase 3
+        billing_support_tool,  # Phase 4
+        compliance_tool,  # Phase 4
+        general_info_tool,  # Phase 4
+    )
 
-    # Create supervisor with available tools
-    supervisor = create_supervisor_agent(tools=[technical_support_tool])
-    logger.info("Supervisor initialized with worker tools")
+    # Create supervisor with all 4 specialized worker tools
+    tools = [
+        technical_support_tool,
+        billing_support_tool,
+        compliance_tool,
+        general_info_tool,
+    ]
+
+    supervisor = create_supervisor_agent(tools=tools)
+    logger.info(
+        f"Supervisor initialized with {len(tools)} worker tools: "
+        "technical_support, billing_support, compliance, general_info"
+    )
 except ImportError as e:
     # Workers not yet created - will be initialized later
     logger.warning(f"Workers not available yet: {e}")
@@ -158,4 +231,3 @@ def get_supervisor():
             "Check that OPENAI_API_KEY is set and workers are available."
         )
     return supervisor
-
