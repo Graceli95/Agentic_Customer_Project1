@@ -6,17 +6,20 @@ FastAPI backend for the multi-agent customer service AI system powered by LangCh
 
 This backend provides REST API endpoints for an intelligent customer service system that uses AI agents powered by LangChain v1.0+ and OpenAI's GPT-4o-mini.
 
-**Current Phase: Phase 3 - Multi-Agent Supervisor Architecture** ✅
+**Current Phase: Phase 4 - Additional Worker Agents** ✅
 
-Phase 3 implements a supervisor agent that intelligently routes customer queries to specialized worker agents, enabling domain-specific expertise and better response quality.
+Phase 4 expands the multi-agent system with three additional specialized workers, creating a comprehensive customer service platform that handles technical support, billing, compliance, and general information queries.
 
 **Key Features:**
-- 🎯 **Multi-Agent System** - Supervisor + specialized worker agents
+- 🎯 **4-Worker Multi-Agent System** - Supervisor coordinates 4 specialized domains
 - 🔀 **Intelligent Routing** - Supervisor analyzes queries and delegates to appropriate workers
-- 🛠️ **Technical Support Worker** - Dedicated agent for troubleshooting and technical issues
+- 🛠️ **Technical Support Worker** - Troubleshooting, errors, bugs, and technical issues
+- 💳 **Billing Support Worker** - Payments, invoices, subscriptions, and refunds
+- 📋 **Compliance Worker** - Policies, privacy, GDPR/CCPA, and legal matters
+- 📚 **General Information Worker** - Company info, services, features, and FAQs
 - 💾 **Session-based Memory** - Conversation history maintained across routing
 - 🔄 **RESTful API** with FastAPI
-- ✅ **Comprehensive Test Coverage** - 54 tests passing (44 unit + 10 integration)
+- ✅ **Comprehensive Test Coverage** - 145 tests passing (129 unit + 16 integration)
 - 📊 **LangSmith Tracing** - Debug multi-agent interactions step-by-step
 - 📝 **Routing Visibility** - Detailed logging of supervisor decisions
 
@@ -26,7 +29,7 @@ Phase 3 implements a supervisor agent that intelligently routes customer queries
 - **LangGraph** - Multi-agent orchestration with supervisor pattern
 - **OpenAI GPT-4o-mini** - Language model for all agents
 - **Pydantic** - Data validation and settings management
-- **Pytest** - Testing framework with 64% coverage
+- **Pytest** - Testing framework with comprehensive coverage
 
 ## Project Structure
 
@@ -35,22 +38,28 @@ backend/
 ├── agents/                           # Agent modules
 │   ├── __init__.py                  # Exports get_supervisor(), get_agent()
 │   ├── simple_agent.py              # Phase 2: Simple agent (reference/fallback)
-│   ├── supervisor_agent.py          # Phase 3: Supervisor agent with routing ✅
-│   └── workers/                     # Phase 3+: Specialized worker agents
-│       ├── __init__.py              # Exports worker agents and tools
-│       └── technical_support.py    # Technical support worker + tool ✅
+│   ├── supervisor_agent.py          # Phase 4: Supervisor with 4 workers ✅
+│   └── workers/                     # Phase 3-4: Specialized worker agents
+│       ├── __init__.py              # Exports all workers and tools
+│       ├── technical_support.py    # Technical support worker + tool ✅
+│       ├── billing_support.py      # Billing support worker + tool ✅
+│       ├── compliance.py           # Compliance worker + tool ✅
+│       └── general_info.py         # General information worker + tool ✅
 ├── data/                            # Data and documents
 │   ├── __init__.py
 │   └── docs/                       # Future: Document storage (Phase 5+)
 │       ├── billing/                # Billing-related documents
 │       ├── compliance/             # Compliance documents
 │       └── technical/              # Technical documentation
-├── tests/                           # Test suite
+├── tests/                           # Test suite (145 tests total)
 │   ├── __init__.py
-│   ├── test_main.py                # API endpoint tests (37 tests ✅)
+│   ├── test_main.py                # API endpoint tests (47 tests ✅)
 │   ├── test_agent.py               # Phase 2 agent tests (10 tests)
 │   ├── test_supervisor.py          # Supervisor unit tests (15 tests ✅)
-│   └── test_technical_worker.py    # Technical worker tests (19 tests ✅)
+│   ├── test_technical_worker.py    # Technical worker tests (19 tests ✅)
+│   ├── test_billing_worker.py      # Billing worker tests (18 tests ✅)
+│   ├── test_compliance_worker.py   # Compliance worker tests (18 tests ✅)
+│   └── test_general_info_worker.py # General info worker tests (18 tests ✅)
 ├── utils/                           # Utility functions
 │   └── __init__.py
 ├── main.py                          # FastAPI app with supervisor routing ✅
@@ -63,68 +72,86 @@ backend/
 └── README.md                        # This file
 ```
 
-**Phase 3 Status:** ✅ Complete
-- Multi-agent supervisor architecture with intelligent routing
-- Technical support worker agent for troubleshooting
+**Phase 4 Status:** ✅ Complete
+- 4-worker multi-agent supervisor architecture with intelligent routing
+- **Technical Support Worker** - Errors, bugs, crashes, troubleshooting
+- **Billing Support Worker** - Payments, invoices, subscriptions, refunds
+- **Compliance Worker** - Policies, privacy, GDPR/CCPA, data protection
+- **General Information Worker** - Company info, services, features, FAQs
 - Tool-calling pattern (supervisor calls workers as tools)
 - Conversation memory maintained across routing
 - Enhanced logging with routing visibility (🔀 ROUTING, ✋ DIRECT)
-- 54 tests passing: 44 unit tests + 10 integration tests
+- 145 tests passing: 129 unit tests + 16 integration tests
 - LangSmith tracing shows multi-agent interactions
+- 91% code coverage for all worker agents
 
-## Multi-Agent Architecture (Phase 3)
+## Multi-Agent Architecture (Phase 4)
 
 ### Overview
 
-Phase 3 implements a **supervisor pattern** where a coordinator agent intelligently routes queries to specialized worker agents based on the query content. This enables domain-specific expertise and better response quality.
+Phase 4 implements a comprehensive **multi-agent supervisor pattern** with 4 specialized worker agents. The supervisor intelligently analyzes incoming queries and routes them to the most appropriate domain expert, enabling specialized responses across technical support, billing, compliance, and general information domains.
 
 **Architecture Diagram:**
 ```
 User Query → FastAPI /chat Endpoint
     ↓
-Supervisor Agent (Analyzes Query)
+Supervisor Agent (Analyzes Query & Routes)
     ↓
-    ├─→ [Technical Support Tool] → Technical Worker Agent → Response
-    │                                      ↓
-    └─→ [Direct Handling] ────────────→ Response
+    ├─→ [Technical Support Tool] → Technical Worker → Response (errors, bugs, crashes)
+    ├─→ [Billing Support Tool] → Billing Worker → Response (payments, invoices, refunds)
+    ├─→ [Compliance Tool] → Compliance Worker → Response (policies, privacy, GDPR/CCPA)
+    ├─→ [General Info Tool] → General Info Worker → Response (company info, services)
+    └─→ [Direct Handling] → Response (greetings, thanks, simple queries)
+         ↓
+    User receives specialized response
 ```
 
 ### How It Works
 
 1. **User sends query** to `/chat` endpoint with session_id
-2. **Supervisor agent analyzes** the query to understand intent
-3. **Routing decision**:
-   - **Technical queries** (errors, bugs, crashes) → Routes to Technical Support worker
-   - **General queries** (greetings, thanks, clarifications) → Handles directly
+2. **Supervisor agent analyzes** the query to understand intent and domain
+3. **Routing decision** to appropriate specialist:
+   - **Technical queries** (errors, bugs, crashes, troubleshooting) → Technical Support worker
+   - **Billing queries** (payments, invoices, subscriptions, refunds) → Billing Support worker
+   - **Compliance queries** (policies, privacy, GDPR/CCPA, data deletion) → Compliance worker
+   - **General queries** (company info, services, features, FAQs) → General Information worker
+   - **Simple queries** (greetings, thanks, clarifications) → Handles directly
 4. **Response generation**:
-   - Worker agents provide specialized expertise
-   - Supervisor ensures complete response returned to user
+   - Worker agents provide specialized domain expertise
+   - Supervisor ensures complete, accurate response returned to user
 5. **Memory maintained** across routing via checkpointer + thread_id
 
 ### Supervisor Agent
 
 **Location:** `backend/agents/supervisor_agent.py`
 
-**Role:** Coordinator that routes queries to appropriate workers
+**Role:** Intelligent coordinator that analyzes queries and routes to appropriate domain specialists
 
 **Key Features:**
-- Analyzes query intent using GPT-4o-mini
-- Routes technical queries to Technical Support worker tool
-- Handles general conversational queries directly
+- Analyzes query intent and domain using GPT-4o-mini
+- Routes to 4 specialized worker tools based on query content
+- Handles simple conversational queries directly
 - Maintains conversation memory with InMemorySaver checkpointer
 - Provides comprehensive final responses to users
 
 **System Prompt Strategy:**
 ```python
-# Supervisor understands:
-# - When to route (technical issues) vs handle directly (general chat)
+# Supervisor understands routing across 4 domains:
+# - Technical Support: errors, bugs, crashes, troubleshooting
+# - Billing Support: payments, invoices, subscriptions, refunds
+# - Compliance: policies, privacy, GDPR/CCPA, data protection
+# - General Information: company info, services, features, FAQs
+# - Direct handling: greetings, thanks, simple questions
 # - How to use worker tools with complete context
 # - Importance of returning full responses to users
 ```
 
 **Tool Configuration:**
-- Registered with `technical_support_tool`
-- Can be extended with additional worker tools (billing, compliance, etc.)
+- Registered with 4 worker tools:
+  - `technical_support_tool` - Technical issues and troubleshooting
+  - `billing_support_tool` - Payments, invoices, and subscriptions
+  - `compliance_tool` - Policies, privacy, and data protection
+  - `general_info_tool` - Company information and services
 
 ### Technical Support Worker
 
@@ -163,9 +190,115 @@ def technical_support_tool(query: str) -> str:
 - Asks clarifying questions when needed
 - Maintains technical accuracy
 
+### Billing Support Worker
+
+**Location:** `backend/agents/workers/billing_support.py`
+
+**Role:** Specialized agent for payment, billing, and subscription matters
+
+**Expertise:**
+- Payment processing and methods
+- Invoice and charge inquiries
+- Subscription management (upgrade, downgrade, cancel)
+- Refund requests and disputes
+- Pricing information and plans
+- Account balance issues
+
+**Tool Wrapper:**
+```python
+@tool
+def billing_support_tool(query: str) -> str:
+    """Handle billing and payment questions including charges, refunds, and subscriptions.
+    
+    Use this tool when users ask about:
+    - Payment methods, processing, or errors
+    - Invoice details or unexpected charges
+    - Subscription changes or cancellation
+    - Refund requests or billing disputes
+    - Pricing or plan information
+    """
+```
+
+**Key Features:**
+- Financial accuracy and attention to detail
+- Clear explanations of charges and policies
+- Empathetic handling of billing concerns
+- Secure handling of payment information
+
+### Compliance Worker
+
+**Location:** `backend/agents/workers/compliance.py`
+
+**Role:** Specialized agent for policy, privacy, and regulatory compliance matters
+
+**Expertise:**
+- Terms of Service and policies
+- Privacy policy and data collection practices
+- GDPR, CCPA, and data protection regulations
+- Data deletion, export, and access requests
+- Cookie policy and consent management
+- Legal and regulatory questions
+
+**Tool Wrapper:**
+```python
+@tool
+def compliance_tool(query: str) -> str:
+    """Handle compliance, policy, and privacy questions.
+    
+    Use this tool when users ask about:
+    - Terms of Service or policies
+    - Privacy policy and data collection
+    - GDPR, CCPA, or data protection rights
+    - Data deletion, export, or access requests
+    - Legal or regulatory compliance
+    """
+```
+
+**Key Features:**
+- Accurate interpretation of policies and regulations
+- Clear explanations of user rights
+- Professional handling of legal matters
+- Guidance on compliance procedures
+
+### General Information Worker
+
+**Location:** `backend/agents/workers/general_info.py`
+
+**Role:** Specialized agent for company information, services, and general support
+
+**Expertise:**
+- Company background and mission
+- Service offerings and features
+- Getting started guides and onboarding
+- Plan comparisons and recommendations
+- General "how-to" for basic usage
+- Best practices and tips
+- Navigation and interface help
+
+**Tool Wrapper:**
+```python
+@tool
+def general_info_tool(query: str) -> str:
+    """Handle general information questions about company, services, and features.
+    
+    Use this tool when users ask about:
+    - Company information or background
+    - Available services and features
+    - How to get started or use the platform
+    - Plan comparisons or recommendations
+    - General guidance and best practices
+    """
+```
+
+**Key Features:**
+- Comprehensive knowledge of company and services
+- Friendly and welcoming tone for new users
+- Clear guidance for getting started
+- Helpful recommendations and tips
+
 ### Routing Logic
 
-The supervisor uses the **tool description** to decide when to call workers:
+The supervisor uses **tool descriptions** to intelligently route queries to the most appropriate worker:
 
 **Routes to Technical Support Tool when query contains:**
 - Error messages (e.g., "Error 500", "404 not found")
@@ -173,11 +306,29 @@ The supervisor uses the **tool description** to decide when to call workers:
 - Technical terms (e.g., "install", "configure", "setup", "performance")
 - Troubleshooting requests (e.g., "how do I fix", "can't access")
 
+**Routes to Billing Support Tool when query contains:**
+- Payment keywords (e.g., "payment", "charge", "charged", "invoice")
+- Subscription terms (e.g., "subscription", "upgrade", "downgrade", "cancel")
+- Refund requests (e.g., "refund", "money back", "charged twice")
+- Pricing inquiries (e.g., "how much", "cost", "price", "plan")
+
+**Routes to Compliance Tool when query contains:**
+- Policy keywords (e.g., "privacy policy", "terms of service", "policies")
+- Regulatory terms (e.g., "GDPR", "CCPA", "data protection", "compliance")
+- Data rights (e.g., "delete my data", "export data", "data access")
+- Legal questions (e.g., "legal", "regulations", "rights", "consent")
+
+**Routes to General Info Tool when query contains:**
+- Company inquiries (e.g., "about your company", "who are you", "what do you do")
+- Service questions (e.g., "what services", "features", "offerings")
+- Getting started (e.g., "how do I start", "getting started", "onboarding")
+- Plan comparisons (e.g., "compare plans", "which plan", "differences")
+
 **Handles directly when query is:**
 - Greetings (e.g., "Hello", "Hi there")
 - Gratitude (e.g., "Thank you", "Thanks")
 - Clarifications (e.g., "What do you mean?", "Can you explain?")
-- General conversation (e.g., "That makes sense", "I understand")
+- Simple acknowledgments (e.g., "That makes sense", "I understand")
 
 **Routing Visibility:**
 
@@ -975,41 +1126,48 @@ For questions or issues:
 
 ---
 
-## Phase 3 Completion Status
+## Phase 4 Completion Status
 
-**✅ Phase 3 Complete** - Multi-Agent Supervisor Architecture
+**✅ Phase 4 Complete** - 4-Worker Multi-Agent System
 
 **What's Included:**
-- **Supervisor Agent** - Intelligent query routing coordinator
-- **Technical Support Worker** - Specialized troubleshooting agent
-- **Tool-Calling Pattern** - Workers wrapped as supervisor tools
-- **Intelligent Routing** - Analyzes intent, routes to appropriate worker
+- **Supervisor Agent** - Intelligent coordinator routing across 4 domains
+- **Technical Support Worker** - Errors, bugs, crashes, troubleshooting
+- **Billing Support Worker** - Payments, invoices, subscriptions, refunds
+- **Compliance Worker** - Policies, privacy, GDPR/CCPA, data protection
+- **General Information Worker** - Company info, services, features, FAQs
+- **Tool-Calling Pattern** - All workers wrapped as supervisor tools
+- **Intelligent Routing** - Analyzes intent, routes to appropriate domain specialist
 - **Conversation Memory** - Maintained across routing via checkpointer
 - **Routing Visibility** - Detailed logging (🔀 ROUTING, ✋ DIRECT indicators)
-- **Comprehensive Tests** - 54 tests passing (44 unit + 10 integration), 64% coverage
+- **Comprehensive Tests** - 145 tests passing (129 unit + 16 integration)
+- **High Coverage** - 91% for all worker agents
 - **LangSmith Support** - Multi-agent interaction tracing
 - **Extensible Architecture** - Easy to add new worker agents
 
 **Architecture:**
 ```
-User → /chat Endpoint → Supervisor Agent
+User → /chat Endpoint → Supervisor Agent (Analyzes Query)
                             ↓
-                    ├─→ Technical Support Tool → Worker Agent
-                    └─→ Direct Handling
-                            ↓
-                        Response to User
+            ├─→ Technical Support Tool → Technical Worker
+            ├─→ Billing Support Tool → Billing Worker
+            ├─→ Compliance Tool → Compliance Worker
+            ├─→ General Info Tool → General Info Worker
+            └─→ Direct Handling
+                    ↓
+            Specialized Response to User
 ```
 
 **What's Next:**
-- **Phase 4**: Additional worker agents (billing, compliance, general info)
 - **Phase 5**: RAG/CAG with document retrieval for knowledge base
 - **Phase 6**: AWS Bedrock integration and streaming responses
+- **Phase 7**: Frontend integration and user interface
 
 ---
 
-**Version**: 1.0.0 (Phase 3)  
+**Version**: 1.1.0 (Phase 4)  
 **Last Updated**: November 4, 2025  
 **LangChain Version**: 1.0+  
-**Test Coverage**: 64% (54 tests passing)  
+**Test Coverage**: 145 tests passing (129 unit + 16 integration)  
 **Status**: ✅ Production Ready
 
