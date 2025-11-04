@@ -2,9 +2,9 @@
 
 An intelligent, agentic customer service system powered by LangChain v1.0+ and LangGraph.
 
-**Current Status: Phase 2 Complete ✅** - Simple Agent Foundation with conversation memory and full-stack chat interface.
+**Current Status: Phase 3 Complete ✅** - Multi-Agent Supervisor Architecture with intelligent routing to specialized workers.
 
-This system uses AI agents to provide natural language customer service conversations. Phase 2 implements a single conversational agent with memory management, providing a foundation for multi-agent architectures in future phases.
+This system uses a multi-agent architecture to provide intelligent customer service. A supervisor agent analyzes queries and routes them to specialized worker agents for domain-specific expertise, while maintaining conversation memory across routing.
 
 ## 🚀 Quick Start
 
@@ -37,19 +37,32 @@ pnpm dev
 
 ---
 
-## ✨ Phase 2 Features (Current)
+## ✨ Phase 3 Features (Current)
 
 **What's Working Now:**
 
-🤖 **Conversational AI Agent**
-- Powered by OpenAI GPT-4o-mini
-- Natural language understanding
-- Context-aware responses
+🎯 **Multi-Agent System**
+- Supervisor agent coordinates query routing
+- Technical Support worker for troubleshooting
+- Intelligent intent analysis and routing decisions
+- Extensible architecture for adding new workers
 
-💾 **Session Management**
+🔀 **Intelligent Routing**
+- Technical queries → Technical Support specialist
+- General queries → Supervisor handles directly
+- Maintains conversation context across routing
+- Detailed logging (🔀 ROUTING, ✋ DIRECT indicators)
+
+🛠️ **Technical Support Specialist**
+- Dedicated agent for error troubleshooting
+- Step-by-step diagnostic guidance
+- Handles bugs, crashes, configuration issues
+- Expert-level technical knowledge
+
+💾 **Advanced Session Management**
 - UUID-based session IDs
-- Conversation memory (InMemorySaver)
-- Persistent across page refreshes
+- Conversation memory maintained across routing
+- Persistent across page refreshes and agent switches
 - Clear conversation to start fresh
 
 🎨 **Modern Chat Interface**
@@ -61,24 +74,28 @@ pnpm dev
 - Auto-scroll to latest message
 
 ✅ **Production Quality**
-- 37 automated tests passing (69% coverage)
+- 54 automated tests passing (64% coverage)
+  - 44 unit tests (supervisor, workers, endpoints)
+  - 10 integration tests (routing behavior)
 - Comprehensive error handling
-- LangSmith tracing support
+- LangSmith tracing shows multi-agent interactions
 - Type-safe TypeScript frontend
-- RESTful API design
+- RESTful API design with routing visibility
 
 **Try It Out:**
 1. Start the application (see Quick Start above)
 2. Open http://localhost:3000
-3. Start chatting with the AI!
-4. Test conversation memory: "My name is Alice" → "What is my name?"
-5. Clear conversation to start a new session
+3. Test technical query: "Getting Error 500 when logging in"
+   - Watch logs for `🔀 ROUTING` indicator
+4. Test general query: "Hello! How are you?"
+   - Watch logs for `✋ DIRECT` indicator
+5. Test memory across routing: Follow-up on technical issue
+6. Clear conversation to start a new session
 
 **Next Phases:**
-- **Phase 3**: Multi-agent supervisor pattern
-- **Phase 4**: Specialized worker agents (technical, billing, compliance)
-- **Phase 5**: RAG with document retrieval
-- **Phase 6**: AWS Bedrock integration
+- **Phase 4**: Additional worker agents (billing, compliance, general info)
+- **Phase 5**: RAG/CAG with document retrieval for knowledge base
+- **Phase 6**: AWS Bedrock integration and streaming responses
 
 ---
 
@@ -105,23 +122,24 @@ pnpm dev
 
 This project implements an intelligent customer service AI system powered by LangChain v1.0+ and OpenAI's GPT-4o-mini.
 
-**Phase 2 (Current) - Simple Agent Foundation:**
+**Phase 3 (Current) - Multi-Agent Supervisor Architecture:**
 
-A conversational AI agent with memory management that:
+A multi-agent system with intelligent routing that:
 
-- 💬 **Engages in Natural Conversations**: Understands and responds to customer queries
-- 🧠 **Maintains Context**: Remembers conversation history within each session
+- 🎯 **Supervisor Agent**: Analyzes queries and routes to appropriate specialists
+- 🛠️ **Technical Support Worker**: Specialized agent for troubleshooting errors and technical issues
+- 🔀 **Intelligent Routing**: Routes technical queries to workers, handles general queries directly
+- 🧠 **Maintains Context**: Remembers conversation history across routing and worker switches
 - 🔄 **Manages Sessions**: UUID-based session IDs for multiple conversations
 - ⚡ **Responds in Real-Time**: Fast, context-aware responses via REST API
 - 🎨 **Modern Web Interface**: Full-stack Next.js chat interface
+- 📊 **Routing Visibility**: Detailed logging shows routing decisions
 
 **Future Phases (Planned):**
 
-- **Phase 3+**: Multi-agent supervisor pattern
-- **Handle Technical Support**: Specialized agent with product documentation (RAG)
-- **Process Billing Inquiries**: Dedicated agent for billing and payments
-- **Answer Compliance Questions**: Specialized agent for policies and regulations
-- **Route Intelligently**: Supervisor agent routes to appropriate specialist
+- **Phase 4**: Additional worker agents (billing, compliance, general information)
+- **Phase 5**: RAG/CAG with document retrieval for knowledge base
+- **Phase 6**: AWS Bedrock integration and streaming responses
 
 **Key Technologies:**
 
@@ -138,7 +156,7 @@ A conversational AI agent with memory management that:
 
 ## 🏗️ Architecture
 
-**Phase 2 Architecture (Current):**
+**Phase 3 Architecture (Current) - Multi-Agent Supervisor:**
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -153,39 +171,54 @@ A conversational AI agent with memory management that:
                    │ POST /chat
                    │ {message, session_id}
                    ↓
-┌─────────────────────────────────────────────┐
-│      Backend (FastAPI + LangChain)          │
-│   ┌────────────────────────────────────┐   │
-│   │  /chat Endpoint                    │   │
-│   │  • Request validation              │   │
-│   │  • Session ID handling             │   │
-│   └──────────────┬─────────────────────┘   │
-│                  ↓                          │
-│   ┌────────────────────────────────────┐   │
-│   │  Customer Service Agent            │   │
-│   │  • Model: GPT-4o-mini              │   │
-│   │  • Memory: InMemorySaver           │   │
-│   │  • Session-based context           │   │
-│   └──────────────┬─────────────────────┘   │
-│                  ↓                          │
-│   ┌────────────────────────────────────┐   │
-│   │  Response                          │   │
-│   │  {response, session_id}            │   │
-│   └────────────────────────────────────┘   │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│      Backend (FastAPI + LangChain Multi-Agent)           │
+│   ┌────────────────────────────────────┐                │
+│   │  /chat Endpoint                    │                │
+│   │  • Request validation              │                │
+│   │  • Session ID handling             │                │
+│   └──────────────┬─────────────────────┘                │
+│                  ↓                                       │
+│   ┌────────────────────────────────────────────────┐   │
+│   │  Supervisor Agent (GPT-4o-mini)                │   │
+│   │  • Analyzes query intent                       │   │
+│   │  • Routes to appropriate worker OR handles     │   │
+│   │  • Memory: InMemorySaver (cross-routing)       │   │
+│   └─────────┬────────────────────────┬─────────────┘   │
+│             │                        │                  │
+│             │ 🔀 Technical Query     │ ✋ General       │
+│             ↓                        ↓                  │
+│   ┌─────────────────────┐    ┌──────────────────┐     │
+│   │ Technical Support   │    │ Direct Handling  │     │
+│   │ Worker Tool         │    │ by Supervisor    │     │
+│   │ • GPT-4o-mini       │    │                  │     │
+│   │ • Troubleshooting   │    │                  │     │
+│   │ • Step-by-step      │    │                  │     │
+│   └─────────┬───────────┘    └────────┬─────────┘     │
+│             └────────────┬─────────────┘                │
+│                          ↓                              │
+│   ┌────────────────────────────────────────────────┐   │
+│   │  Response (from worker or supervisor)          │   │
+│   │  {response, session_id}                        │   │
+│   │  Logs: 🔀 ROUTING or ✋ DIRECT                 │   │
+│   └────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────┘
 ```
 
 **Key Components:**
-- **Single Agent**: One conversational agent handling all queries
-- **Session Memory**: InMemorySaver maintains conversation context per session_id
-- **REST API**: Simple request/response pattern with FastAPI
-- **Type Safety**: Pydantic models for request/response validation
+- **Supervisor Agent**: Routes queries based on intent analysis
+- **Technical Support Worker**: Specialized troubleshooting agent (wrapped as tool)
+- **Intelligent Routing**: Technical queries → worker, general → direct handling
+- **Session Memory**: InMemorySaver maintains context across routing
+- **Routing Visibility**: Logs show routing decisions (🔀 or ✋)
+- **REST API**: Request/response pattern with multi-agent orchestration
+- **Type Safety**: Pydantic models for validation
 
-**Future Architecture (Phase 3+):**
+**Future Architecture (Phase 4+):**
 
-Will implement a **supervisor pattern** with specialized worker agents:
+Will add more specialized worker agents:
 ```
-User Query → Supervisor Agent → [Technical | Billing | Compliance] Agent → Response
+User Query → Supervisor Agent → [Technical | Billing | Compliance | General Info] Agent → Response
 ```
 
 For detailed architecture information, see:
@@ -248,20 +281,28 @@ This is a **monorepo** containing both backend and frontend in a single reposito
 ```
 Agentic_Customer_Project1/
 ├── backend/                    # Python FastAPI backend
-│   ├── agents/                 # Agent modules
-│   │   └── workers/           # Specialized worker agents
+│   ├── agents/                 # Agent modules (Phase 2-3)
+│   │   ├── simple_agent.py     # Phase 2: Simple agent (reference)
+│   │   ├── supervisor_agent.py # Phase 3: Supervisor ✅
+│   │   └── workers/            # Phase 3: Specialized workers ✅
+│   │       └── technical_support.py  # Technical worker ✅
 │   ├── data/                   # Data and documents
-│   │   └── docs/              # Document repositories
+│   │   └── docs/              # Document repositories (Phase 5+)
 │   │       ├── technical/     # Technical documentation
 │   │       ├── billing/       # Billing documents
 │   │       └── compliance/    # Compliance documents
-│   ├── tests/                  # Backend tests
+│   ├── tests/                  # Backend tests (54 tests ✅)
+│   │   ├── test_main.py        # API + routing integration tests
+│   │   ├── test_agent.py       # Phase 2 agent tests
+│   │   ├── test_supervisor.py  # Supervisor unit tests ✅
+│   │   └── test_technical_worker.py # Worker unit tests ✅
 │   ├── utils/                  # Utility functions
-│   ├── main.py                # FastAPI application
+│   ├── main.py                # FastAPI app with supervisor routing ✅
+│   ├── test_routing_logs.sh   # Routing test script ✅
 │   ├── requirements.txt       # Python dependencies
 │   ├── .env.example          # Environment variables template
 │   ├── Dockerfile            # Backend container config
-│   └── README.md             # Backend documentation
+│   └── README.md             # Backend documentation (Phase 3 ✅)
 │
 ├── frontend/                   # Next.js TypeScript frontend
 │   ├── app/                   # Next.js App Router pages
@@ -274,18 +315,23 @@ Agentic_Customer_Project1/
 │   └── README.md             # Frontend documentation
 │
 ├── tasks/                      # Project management
-│   ├── 0001-prd-project-setup.md        # PRD documents
-│   └── tasks-0001-prd-project-setup.md  # Task lists
+│   ├── 0001-prd-project-setup.md        # Phase 1 PRD
+│   ├── tasks-0001-prd-project-setup.md  # Phase 1 tasks
+│   ├── 0002-prd-simple-agent.md         # Phase 2 PRD
+│   ├── tasks-0002-prd-simple-agent.md   # Phase 2 tasks
+│   ├── 0003-prd-multi-agent-supervisor.md     # Phase 3 PRD ✅
+│   └── tasks-0003-prd-multi-agent-supervisor.md # Phase 3 tasks ✅
 │
 ├── .github/                    # GitHub workflows and templates
 │   └── workflows/             # CI/CD pipelines
 │
-├── docker-compose.yml         # Docker orchestration (to be created)
+├── PHASE3_MULTI_AGENT_DEMO_GUIDE.md  # Phase 3 demo guide ✅
+├── docker-compose.yml         # Docker orchestration
 ├── ARCHITECTURE.md            # System architecture docs
 ├── FLOWCHARTS.md             # Process flow diagrams
 ├── PHASED_DEVELOPMENT_GUIDE.md # Development roadmap
 ├── CONTRIBUTING.md           # Contribution guidelines
-└── README.md                 # This file
+└── README.md                 # This file (Phase 3 ✅)
 ```
 
 **Key Points:**
@@ -551,25 +597,41 @@ After enabling, try to:
 
 ### Automated Tests
 
-**Backend Tests (37 passing, 69% coverage):**
+**Backend Tests (54 passing, 64% coverage):**
 
 ```bash
 cd backend
 source venv/bin/activate
 
-# Run all tests
+# Run all tests (unit only, fast)
 pytest
+
+# Run with integration tests (mocked, no tokens used)
+pytest --run-integration
 
 # Run with coverage report
 pytest --cov=. --cov-report=html
 
 # Run specific test suites
-pytest tests/test_main.py -v    # API endpoint tests (27 tests)
-pytest tests/test_agent.py -v   # Agent unit tests (10 tests)
+pytest tests/test_main.py -v              # API + routing integration (37 tests)
+pytest tests/test_supervisor.py -v        # Supervisor unit tests (15 tests)
+pytest tests/test_technical_worker.py -v  # Worker unit tests (19 tests)
+pytest tests/test_agent.py -v             # Phase 2 agent tests (10 tests)
 
 # View coverage report
 open htmlcov/index.html
 ```
+
+**Test Breakdown:**
+- **Unit Tests (44 tests)**: Fast, mocked, no API calls
+  - 15 supervisor tests
+  - 19 technical worker tests
+  - 10 Phase 2 agent tests (reference)
+- **Integration Tests (10 tests)**: Full endpoint routing tests (mocked supervisor)
+  - Technical query routing
+  - General query handling
+  - Context maintenance across routing
+  - Error handling scenarios
 
 **Frontend Linting & Type Checks:**
 
@@ -596,7 +658,7 @@ make lint        # Run all linters
 
 ### Manual Testing Guide
 
-**Conversation Testing:**
+**Multi-Agent Routing Testing (Phase 3):**
 
 1. **Start the application:**
    ```bash
@@ -607,25 +669,40 @@ make lint        # Run all linters
    cd frontend && pnpm dev
    ```
 
-2. **Test basic conversation:**
+2. **Test technical query routing:**
    - Open http://localhost:3000
-   - Type: "Hello, how can you help me?"
-   - Verify: AI responds appropriately
+   - Type: "Getting Error 500 when logging in"
+   - **Expected**: Technical troubleshooting response
+   - **Check logs**: Should see `🔀 ROUTING: Query routed to worker agent`
 
-3. **Test conversation memory:**
-   - Type: "My name is Alice"
-   - Type: "What is my name?"
-   - Verify: AI remembers "Alice"
+3. **Test general query direct handling:**
+   - Type: "Hello! How are you?"
+   - **Expected**: Friendly greeting response
+   - **Check logs**: Should see `✋ DIRECT: Supervisor handled query directly`
 
-4. **Test session persistence:**
+4. **Test conversation memory across routing:**
+   - Type: "I'm having an installation problem"
+   - Type: "What did I just say?"
+   - **Expected**: AI remembers the installation problem
+   - **Verify**: Context maintained across routing
+
+5. **Test session persistence:**
    - Refresh the page (F5)
-   - Type: "Do you remember my name?"
-   - Verify: AI still remembers "Alice"
+   - Type: "Do you remember my issue?"
+   - **Verify**: AI still remembers (session persisted)
 
-5. **Test clear conversation:**
+6. **Test clear conversation:**
    - Click "Clear Conversation" button
-   - Type: "What is my name?"
-   - Verify: AI doesn't remember (new session)
+   - Type: "What was my problem?"
+   - **Verify**: AI doesn't remember (new session)
+
+**Test Routing with Script:**
+```bash
+cd backend
+chmod +x test_routing_logs.sh
+./test_routing_logs.sh
+# Watch logs for 🔀 ROUTING and ✋ DIRECT indicators
+```
 
 **For comprehensive manual testing scenarios, see [MANUAL_TESTING.md](./MANUAL_TESTING.md)**
 
@@ -790,35 +867,50 @@ For questions or issues:
 
 ---
 
-## 🎉 Phase 2 Complete!
+## 🎉 Phase 3 Complete!
 
 **What We Built:**
-- ✅ Simple conversational agent with GPT-4o-mini
-- ✅ Session-based conversation memory (InMemorySaver)
-- ✅ Full-stack chat interface (Next.js + FastAPI)
-- ✅ 37 automated tests (69% coverage)
-- ✅ LangSmith tracing support
-- ✅ Comprehensive documentation
-- ✅ CI/CD with GitHub Actions
-- ✅ Pre-commit hooks and local testing
+- ✅ **Supervisor Agent** - Intelligent query routing coordinator
+- ✅ **Technical Support Worker** - Specialized troubleshooting agent
+- ✅ **Multi-Agent System** - Supervisor + worker architecture
+- ✅ **Intelligent Routing** - Technical vs. general query analysis
+- ✅ **Conversation Memory** - Maintained across routing
+- ✅ **Routing Visibility** - Detailed logging (🔀 ROUTING, ✋ DIRECT)
+- ✅ **Full-stack Integration** - Multi-agent backend + Next.js frontend
+- ✅ **54 automated tests** (64% coverage: 44 unit + 10 integration)
+- ✅ **LangSmith Support** - Multi-agent interaction tracing
+- ✅ **Comprehensive Documentation** - Architecture, testing, demo guide
+- ✅ **CI/CD** - All checks passing with Phase 3 tests
 
 **Development Timeline:**
 - Phase 1: Project Setup ✅ (Complete)
 - Phase 2: Simple Agent Foundation ✅ (Complete - 20/20 tasks)
-- Phase 3: Multi-Agent Architecture (Next)
+- Phase 3: Multi-Agent Supervisor ✅ (Complete - 13/13 tasks)
+- Phase 4: Additional Workers (Next - Billing, Compliance, General Info)
 
 **Test Coverage:**
-- Backend: 69% (37 tests passing)
+- Backend: 64% (54 tests passing)
+  - 15 supervisor unit tests
+  - 19 technical worker unit tests  
+  - 10 routing integration tests
+  - 10 Phase 2 agent tests (reference)
 - Frontend: TypeScript + ESLint checks passing
 - CI: All checks passing
 
+**Architecture Achieved:**
+```
+User Query → Supervisor → [Technical Worker | Direct] → Response
+             ↓
+         Routing Logs (🔀 or ✋)
+```
+
 ---
 
-**Version**: 1.0.0 (Phase 2)  
-**Last Updated**: November 3, 2025  
-**Status**: Phase 2 Complete ✅ - Production Ready  
+**Version**: 1.0.0 (Phase 3)  
+**Last Updated**: November 4, 2025  
+**Status**: Phase 3 Complete ✅ - Production Ready Multi-Agent System  
 **LangChain Version**: 1.0+  
-**Next Phase**: Multi-Agent Supervisor Pattern (Phase 3)
+**Next Phase**: Additional Worker Agents (Phase 4)
 
 ---
 
