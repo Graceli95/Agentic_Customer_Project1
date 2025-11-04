@@ -205,9 +205,8 @@ def billing_docs_search(
         
         if cached_policies:
             logger.info("[HYBRID RAG/CAG] Using cached billing policies (CAG)")
-            return Command(
-                result=cached_policies
-            )
+            # Return cached content directly (no state update needed)
+            return cached_policies
         
         # First time: Retrieve from vector store (RAG)
         logger.info("[HYBRID RAG/CAG] First query - retrieving from vector store (RAG)")
@@ -216,7 +215,8 @@ def billing_docs_search(
         if vectorstore is None:
             logger.error("Billing vector store not available")
             return Command(
-                result="Billing information is currently unavailable. Please try again later."
+                update={"billing_policies": "unavailable"},
+                goto="__end__"
             )
         
         # Search vector store
@@ -225,7 +225,8 @@ def billing_docs_search(
         if not docs:
             logger.warning(f"No billing docs found for query: {query[:50]}...")
             return Command(
-                result="I couldn't find specific billing information for that question. Could you provide more details?"
+                update={"billing_policies": "no_results"},
+                goto="__end__"
             )
         
         # Format results with metadata
@@ -242,15 +243,17 @@ def billing_docs_search(
         logger.info(f"[HYBRID RAG/CAG] Retrieved {len(docs)} docs, caching for session")
         
         # Cache the policies for this session (CAG for subsequent queries)
+        # Return Command to update state
         return Command(
             update={"billing_policies": response},
-            result=response
+            goto="__end__"
         )
         
     except Exception as e:
         logger.error(f"Error in billing_docs_search: {e}", exc_info=True)
         return Command(
-            result="An error occurred while searching billing information. Please try again."
+            update={"billing_policies": "error"},
+            goto="__end__"
         )
 
 
