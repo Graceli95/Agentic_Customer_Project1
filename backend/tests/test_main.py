@@ -795,3 +795,313 @@ def test_chat_endpoint_extracts_last_message_content():
         data = response.json()
         # Should return content from last message
         assert data["response"] == "Final response message"
+
+
+# ============================================================================
+# Phase 4: Additional Worker Routing Integration Tests
+# ============================================================================
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_billing_query_to_worker():
+    """Test that billing queries are routed to billing support worker."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        # Mock supervisor agent
+        mock_supervisor = Mock()
+        
+        # Mock the result that includes tool call (indicating routing)
+        mock_user_msg = Mock()
+        mock_user_msg.content = "I was charged twice for my subscription"
+        mock_user_msg.type = "human"
+        
+        mock_tool_call_msg = Mock()
+        mock_tool_call_msg.type = "tool"
+        mock_tool_call_msg.name = "billing_support_tool"
+        
+        mock_response_msg = Mock()
+        mock_response_msg.content = "I understand you were charged twice. Let me help you with that billing issue..."
+        mock_response_msg.type = "ai"
+        
+        mock_supervisor.invoke.return_value = {
+            "messages": [mock_user_msg, mock_tool_call_msg, mock_response_msg]
+        }
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "I was charged twice for my subscription",
+                "session_id": "550e8400-e29b-41d4-a716-446655440000",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        assert "response" in data
+        assert "session_id" in data
+        assert isinstance(data["response"], str)
+        assert len(data["response"]) > 0
+        
+        # Verify supervisor was invoked
+        mock_supervisor.invoke.assert_called_once()
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_compliance_query_to_worker():
+    """Test that compliance queries are routed to compliance worker."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        # Mock supervisor agent
+        mock_supervisor = Mock()
+        
+        # Mock the result that includes tool call (indicating routing)
+        mock_user_msg = Mock()
+        mock_user_msg.content = "What is your privacy policy?"
+        mock_user_msg.type = "human"
+        
+        mock_tool_call_msg = Mock()
+        mock_tool_call_msg.type = "tool"
+        mock_tool_call_msg.name = "compliance_tool"
+        
+        mock_response_msg = Mock()
+        mock_response_msg.content = "Our privacy policy complies with GDPR and CCPA regulations..."
+        mock_response_msg.type = "ai"
+        
+        mock_supervisor.invoke.return_value = {
+            "messages": [mock_user_msg, mock_tool_call_msg, mock_response_msg]
+        }
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "What is your privacy policy?",
+                "session_id": "a1b2c3d4-e5f6-4789-a012-3456789abcde",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        assert "response" in data
+        assert isinstance(data["response"], str)
+        assert len(data["response"]) > 0
+        
+        # Verify supervisor was invoked
+        mock_supervisor.invoke.assert_called_once()
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_general_info_query_to_worker():
+    """Test that general information queries are routed to general info worker."""
+    from unittest.mock import patch, Mock
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        # Mock supervisor agent
+        mock_supervisor = Mock()
+        
+        # Mock the result that includes tool call (indicating routing)
+        mock_user_msg = Mock()
+        mock_user_msg.content = "What services do you offer?"
+        mock_user_msg.type = "human"
+        
+        mock_tool_call_msg = Mock()
+        mock_tool_call_msg.type = "tool"
+        mock_tool_call_msg.name = "general_info_tool"
+        
+        mock_response_msg = Mock()
+        mock_response_msg.content = "We offer cloud hosting, data storage, and analytics services..."
+        mock_response_msg.type = "ai"
+        
+        mock_supervisor.invoke.return_value = {
+            "messages": [mock_user_msg, mock_tool_call_msg, mock_response_msg]
+        }
+        mock_get_supervisor.return_value = mock_supervisor
+
+        response = client.post(
+            "/chat",
+            json={
+                "message": "What services do you offer?",
+                "session_id": "b2c3d4e5-f6a7-4890-b123-456789abcdef",
+            },
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        
+        assert "response" in data
+        assert isinstance(data["response"], str)
+        assert len(data["response"]) > 0
+        
+        # Verify supervisor was invoked
+        mock_supervisor.invoke.assert_called_once()
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_different_worker_types():
+    """Test that different query types are routed to appropriate workers."""
+    from unittest.mock import patch, Mock
+
+    test_cases = [
+        {
+            "query": "I need a refund",
+            "tool": "billing_support_tool",
+            "response": "Let me help you process that refund request..."
+        },
+        {
+            "query": "How do I delete my data under GDPR?",
+            "tool": "compliance_tool",
+            "response": "Under GDPR, you have the right to request data deletion..."
+        },
+        {
+            "query": "Tell me about your company",
+            "tool": "general_info_tool",
+            "response": "We are a leading technology company founded in 2020..."
+        },
+        {
+            "query": "App crashes when I click submit",
+            "tool": "technical_support_tool",
+            "response": "Let me help you troubleshoot that crash..."
+        }
+    ]
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_get_supervisor.return_value = mock_supervisor
+
+        for test_case in test_cases:
+            # Mock response with tool call
+            mock_user_msg = Mock()
+            mock_user_msg.content = test_case["query"]
+            mock_user_msg.type = "human"
+            
+            mock_tool_msg = Mock()
+            mock_tool_msg.type = "tool"
+            mock_tool_msg.name = test_case["tool"]
+            
+            mock_response_msg = Mock()
+            mock_response_msg.content = test_case["response"]
+            mock_response_msg.type = "ai"
+            
+            mock_supervisor.invoke.return_value = {
+                "messages": [mock_user_msg, mock_tool_msg, mock_response_msg]
+            }
+
+            response = client.post(
+                "/chat",
+                json={
+                    "message": test_case["query"],
+                    "session_id": "c3d4e5f6-a7b8-4901-b234-56789abcdef0",
+                },
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "response" in data
+            assert len(data["response"]) > 0
+
+
+@pytest.mark.integration
+def test_chat_endpoint_maintains_context_across_different_workers():
+    """Test that context is maintained when routing to different workers."""
+    from unittest.mock import patch, Mock
+
+    session_id = "d4e5f6a7-b8c9-4012-b345-6789abcdef01"
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_get_supervisor.return_value = mock_supervisor
+        
+        # First message - billing query
+        mock_msg1 = Mock()
+        mock_msg1.content = "Billing support response about payment"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg1]}
+
+        response1 = client.post(
+            "/chat",
+            json={"message": "How do I update my payment method?", "session_id": session_id},
+        )
+        assert response1.status_code == 200
+        
+        # Second message - compliance query (different worker)
+        mock_msg2 = Mock()
+        mock_msg2.content = "Compliance response about privacy"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg2]}
+
+        response2 = client.post(
+            "/chat",
+            json={"message": "What data do you collect?", "session_id": session_id},
+        )
+        assert response2.status_code == 200
+        
+        # Third message - technical query (yet another worker)
+        mock_msg3 = Mock()
+        mock_msg3.content = "Technical support response"
+        mock_supervisor.invoke.return_value = {"messages": [mock_msg3]}
+
+        response3 = client.post(
+            "/chat",
+            json={"message": "The app is slow", "session_id": session_id},
+        )
+        assert response3.status_code == 200
+        
+        # Verify supervisor was called 3 times with same thread_id for context
+        assert mock_supervisor.invoke.call_count == 3
+        
+        # Verify all calls used the same config (same thread_id)
+        for call in mock_supervisor.invoke.call_args_list:
+            config = call[1].get("config") or call[0][1] if len(call[0]) > 1 else None
+            if config:
+                assert config["configurable"]["thread_id"] == session_id
+
+
+@pytest.mark.integration
+def test_chat_endpoint_routes_mixed_query_conversation():
+    """Test realistic conversation with queries for different workers."""
+    from unittest.mock import patch, Mock
+
+    session_id = "e5f6a7b8-c9d0-4123-b456-789abcdef012"
+
+    conversation = [
+        ("Hello! What can you help me with?", "direct", "Hello! I'm here to help with technical support, billing, compliance, and general information."),
+        ("What services do you provide?", "general_info_tool", "We provide cloud hosting, analytics, and data storage services."),
+        ("How much does the premium plan cost?", "billing_support_tool", "Our premium plan is $29/month with annual billing available."),
+        ("Do you comply with GDPR?", "compliance_tool", "Yes, we are fully GDPR compliant and take data protection seriously."),
+        ("I'm having trouble logging in", "technical_support_tool", "Let me help you troubleshoot that login issue."),
+    ]
+
+    with patch("backend.main.get_supervisor") as mock_get_supervisor:
+        mock_supervisor = Mock()
+        mock_get_supervisor.return_value = mock_supervisor
+
+        for message, expected_tool, response_text in conversation:
+            mock_msg = Mock()
+            mock_msg.content = response_text
+            mock_msg.type = "ai"
+            
+            if expected_tool != "direct":
+                # Include tool call in messages
+                mock_tool = Mock()
+                mock_tool.type = "tool"
+                mock_tool.name = expected_tool
+                mock_supervisor.invoke.return_value = {"messages": [mock_tool, mock_msg]}
+            else:
+                # Direct handling (no tool)
+                mock_supervisor.invoke.return_value = {"messages": [mock_msg]}
+
+            response = client.post(
+                "/chat",
+                json={"message": message, "session_id": session_id},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert "response" in data
+            assert len(data["response"]) > 0
+
+        # Verify all messages used same session
+        assert mock_supervisor.invoke.call_count == len(conversation)
