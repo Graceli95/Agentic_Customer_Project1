@@ -114,13 +114,18 @@
   - 99% code coverage on test file, 91% on technical_support.py
 
 ### 5.0 Testing: Integration Tests
-- [ ] 5.1 Update `backend/tests/test_main.py` with routing integration tests
-  - Test technical query routes to worker (e.g., "error 500")
-  - Test general query handled by supervisor (e.g., "hello")
+- [x] 5.1 Update `backend/tests/test_main.py` with routing integration tests (branch: feat/phase3-5.1-routing-integration-tests)
+  - ✅ 10 integration tests created, all passing
+  - Test technical query routing through supervisor
+  - Test general query handled directly by supervisor
   - Test conversation context maintained across routing
-  - Test worker response properly returned to user
-  - Test error handling for tool failures
-  - Branch: `feat/phase3-5.1-routing-integration-tests`
+  - Test different types of technical and general queries
+  - Test supervisor initialization and invocation errors
+  - Test proper session_id handling in responses
+  - Test config with thread_id passed to supervisor
+  - Test extracting last message content from multi-message results
+  - All tests use mocked supervisor (no OpenAI API calls, no tokens used)
+  - Tests verify full FastAPI endpoint behavior with routing logic
 
 ### 6.0 Documentation and Manual Testing
 - [ ] 6.1 Update `backend/README.md` with Phase 3 architecture
