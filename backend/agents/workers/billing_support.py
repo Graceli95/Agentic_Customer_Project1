@@ -6,6 +6,7 @@ payment, invoice, subscription, and refund queries. It's called as a tool
 by the supervisor agent using the tool-calling pattern.
 
 Phase: 4 - Additional Worker Agents
+Phase: 5 - RAG/CAG Integration (Hybrid RAG/CAG strategy)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
 Last Updated: November 4, 2025
@@ -15,6 +16,9 @@ from langchain.agents import create_agent
 from langchain.tools import tool
 import os
 import logging
+
+# Import Hybrid RAG/CAG tool for billing documentation
+from agents.tools.rag_tools import billing_docs_search
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +73,7 @@ Your role is to:
 - Clarify pricing and billing cycles
 - Resolve billing errors and disputes
 - Provide account balance information
+- Use billing_docs_search tool to find billing policies and pricing information (caches after first use)
 
 Billing Areas You Cover:
 - Payment methods (credit cards, PayPal, bank transfers)
@@ -143,7 +148,7 @@ Be thorough, empathetic, and provide complete guidance."""
     # Create billing support agent using LangChain v1.0 pattern
     agent = create_agent(
         model="openai:gpt-4o-mini",  # Cost-effective model
-        tools=[],  # No tools yet - Phase 5+ may add billing system integration
+        tools=[billing_docs_search],  # Hybrid RAG/CAG: RAG first time, cache for session
         system_prompt=system_prompt,
         checkpointer=None,  # No memory needed - called as tool, not directly
         name="billing_support_agent",  # Required in LangChain v1.0
