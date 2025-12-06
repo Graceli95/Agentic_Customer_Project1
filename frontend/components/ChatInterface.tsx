@@ -49,7 +49,7 @@ interface ChatInterfaceProps {
 export default function ChatInterface({ sessionId, onClearSession }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [useStreaming, setUseStreaming] = useState(true); // Enable streaming by default
+  const [useStreaming, setUseStreaming] = useState(false); // Disable streaming by default (non-streaming works better with create_agent)
 
   /**
    * Generates a unique message ID
@@ -62,6 +62,10 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
    * Handles sending a message to the AI assistant
    */
   const handleSendMessage = async (content: string) => {
+    console.log('🚀 handleSendMessage called with:', content);
+    console.log('📡 useStreaming:', useStreaming);
+    console.log('🔑 sessionId:', sessionId);
+    
     // Create user message
     const userMessage: Message = {
       id: generateMessageId(),
@@ -75,10 +79,12 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
     setIsLoading(true);
 
     try {
+      console.log('✅ About to send request...');
       if (useStreaming) {
         // Use streaming mode (SSE)
         const assistantMessageId = generateMessageId();
         let streamedContent = '';
+        let agentName: string | undefined;
 
         // Create placeholder assistant message
         const assistantMessage: Message = {
@@ -104,6 +110,18 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
                 prev.map((msg) =>
                   msg.id === assistantMessageId
                     ? { ...msg, content: streamedContent }
+                    : msg
+                )
+              );
+            } else if (event.type === 'done' && 'agent' in event) {
+              // Capture agent name from done event
+              agentName = event.agent as string;
+              
+              // Update message with agent info
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, agent: agentName }
                     : msg
                 )
               );
@@ -133,7 +151,9 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
         );
       } else {
         // Use non-streaming mode (traditional)
+        console.log('📞 Calling non-streaming API...');
         const response = await sendChatMessage(content, sessionId);
+        console.log('📥 Received response:', response);
 
         // Create assistant message from response
         const assistantMessage: Message = {
@@ -141,10 +161,14 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
           content: response.response,
           role: 'assistant',
           timestamp: new Date(),
+          agent: response.agent,
         };
+        
+        console.log('💬 Creating assistant message:', assistantMessage);
 
         // Add assistant response to conversation
         setMessages((prev) => [...prev, assistantMessage]);
+        console.log('✅ Message added to state');
       }
     } catch (error) {
       // Handle errors gracefully
@@ -176,6 +200,36 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
     if (onClearSession) {
       onClearSession();
     }
+  };
+
+  /**
+   * Exports the conversation to a text file
+   */
+  const handleExportConversation = () => {
+    if (messages.length === 0) {
+      return;
+    }
+
+    // Format conversation as text
+    const conversationText = messages
+      .filter(m => m.role !== 'error')
+      .map((msg) => {
+        const timestamp = new Date(msg.timestamp).toLocaleString();
+        const role = msg.role === 'user' ? 'You' : `AI Assistant${msg.agent ? ` (${msg.agent})` : ''}`;
+        return `[${timestamp}] ${role}:\n${msg.content}\n`;
+      })
+      .join('\n');
+
+    // Create blob and download
+    const blob = new Blob([conversationText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -252,6 +306,35 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
               <span className="hidden sm:inline">{useStreaming ? 'Streaming' : 'Standard'}</span>
             </div>
           </button>
+
+          {/* Export conversation button */}
+          {messages.length > 0 && (
+            <button
+              onClick={handleExportConversation}
+              disabled={isLoading}
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
+              aria-label="Export conversation"
+              title="Download conversation as text file"
+            >
+              <div className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">Export</span>
+              </div>
+            </button>
+          )}
 
           {/* Clear conversation button */}
           {messages.length > 0 && (

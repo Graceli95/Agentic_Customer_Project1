@@ -8,20 +8,20 @@ LangChain Version: v1.0+
 Last Updated: November 2, 2025
 """
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, field_validator, ValidationError
-from dotenv import load_dotenv
-import os
+import asyncio
+import json
 import logging
+import os
 import re
 import time
-import json
-import asyncio
 
 # Import LangChain agent (Phase 3: using supervisor for multi-agent routing)
 from agents import get_supervisor
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 # Load environment variables
 load_dotenv()
@@ -36,11 +36,11 @@ logger = logging.getLogger(__name__)
 # Import OpenAI for error handling
 try:
     from openai import (
-        APIError,
         APIConnectionError,
-        RateLimitError,
-        AuthenticationError,
+        APIError,
         APITimeoutError,
+        AuthenticationError,
+        RateLimitError,
     )
 
     OPENAI_AVAILABLE = True
@@ -157,6 +157,11 @@ class ChatResponse(BaseModel):
         description="Echo back the session_id for confirmation",
         examples=["550e8400-e29b-41d4-a716-446655440000"],
     )
+    agent: str | None = Field(
+        None,
+        description="Name of the specialist agent that handled the query",
+        examples=["Technical Support", "Billing Support", "General Info", "Compliance"],
+    )
     
     model_config = {
         "json_schema_extra": {
@@ -164,6 +169,7 @@ class ChatResponse(BaseModel):
                 {
                     "response": "I'd be happy to help you with your account. What specific issue are you experiencing?",
                     "session_id": "550e8400-e29b-41d4-a716-446655440000",
+                    "agent": "General Info",
                 }
             ]
         }
@@ -342,15 +348,32 @@ async def chat_endpoint(request: ChatRequest):
         # The last message in the conversation is the agent's response
         response_text = result["messages"][-1].content
         
+        # Detect which agent handled the query by checking tool calls
+        agent_name = None
+        for msg in result["messages"]:
+            # Convert message to dict if it's a LangChain message object
+            msg_dict = msg if isinstance(msg, dict) else (msg.dict() if hasattr(msg, 'dict') else {})
+            msg_type = msg_dict.get("type") or getattr(msg, "type", None)
+            
+            if msg_type == "tool" or msg_dict.get("role") == "tool":
+                tool_name = msg_dict.get("name", "") or getattr(msg, "name", "")
+                # Map tool names to friendly agent names
+                if "technical" in tool_name.lower():
+                    agent_name = "Technical Support"
+                elif "billing" in tool_name.lower():
+                    agent_name = "Billing Support"
+                elif "compliance" in tool_name.lower():
+                    agent_name = "Compliance"
+                elif "general" in tool_name.lower():
+                    agent_name = "General Info"
+                break
+        
         # Analyze routing: Check if any tool was called
-        tool_called = any(
-            msg.get("type") == "tool" or msg.get("role") == "tool"
-            for msg in result["messages"]
-        )
+        tool_called = agent_name is not None
 
         if tool_called:
             logger.info(
-                f"🔀 ROUTING: Query routed to worker agent "
+                f"🔀 ROUTING: Query routed to {agent_name} agent "
                 f"(session: {request.session_id}, time: {elapsed_time:.2f}s)"
             )
         else:
@@ -358,12 +381,17 @@ async def chat_endpoint(request: ChatRequest):
                 f"✋ DIRECT: Supervisor handled query directly "
                 f"(session: {request.session_id}, time: {elapsed_time:.2f}s)"
             )
+            agent_name = "Supervisor"
 
         logger.info(f"Agent response generated for session: {request.session_id}")
         logger.debug(f"Response: {response_text[:50]}...")  # Log first 50 chars
         
-        # Return the response with session confirmation
-        return ChatResponse(response=response_text, session_id=request.session_id)
+        # Return the response with session confirmation and agent info
+        return ChatResponse(
+            response=response_text, 
+            session_id=request.session_id,
+            agent=agent_name
+        )
         
     except HTTPException:
         # Re-raise HTTPExceptions (validation errors, agent init errors)
@@ -537,6 +565,8 @@ async def chat_stream_endpoint(request: ChatRequest):
             
             full_response = ""
             token_count = 0
+            agent_name = None
+            all_messages = []
             
             try:
                 # Stream agent responses
@@ -549,6 +579,8 @@ async def chat_stream_endpoint(request: ChatRequest):
                     if "messages" in event:
                         # Get the latest message
                         messages = event["messages"]
+                        all_messages = messages  # Store for agent detection
+                        
                         if messages and len(messages) > 0:
                             latest_message = messages[-1]
                             
@@ -575,14 +607,32 @@ async def chat_stream_endpoint(request: ChatRequest):
                 yield f"data: {json.dumps({'type': 'error', 'error': str(stream_error), 'session_id': request.session_id})}\\n\\n"
                 return
             
+            # Detect which agent handled the query
+            for msg in all_messages:
+                msg_dict = msg if isinstance(msg, dict) else (msg.dict() if hasattr(msg, 'dict') else {})
+                if msg_dict.get("type") == "tool" or msg_dict.get("role") == "tool":
+                    tool_name = msg_dict.get("name", "")
+                    if "technical" in tool_name.lower():
+                        agent_name = "Technical Support"
+                    elif "billing" in tool_name.lower():
+                        agent_name = "Billing Support"
+                    elif "compliance" in tool_name.lower():
+                        agent_name = "Compliance"
+                    elif "general" in tool_name.lower():
+                        agent_name = "General Info"
+                    break
+            
+            if agent_name is None:
+                agent_name = "Supervisor"
+            
             elapsed_time = time.time() - start_time
             logger.info(
                 f"Streaming completed for session: {request.session_id} "
-                f"({token_count} chunks, {elapsed_time:.2f}s)"
+                f"({token_count} chunks, {elapsed_time:.2f}s, agent: {agent_name})"
             )
             
-            # Send completion event
-            yield f"data: {json.dumps({'type': 'done', 'session_id': request.session_id, 'tokens': token_count, 'time': elapsed_time})}\\n\\n"
+            # Send completion event with agent info
+            yield f"data: {json.dumps({'type': 'done', 'session_id': request.session_id, 'tokens': token_count, 'time': elapsed_time, 'agent': agent_name})}\\n\\n"
             
         except ValidationError as e:
             logger.warning(f"Validation error: {e}")

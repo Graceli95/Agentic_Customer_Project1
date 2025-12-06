@@ -32,6 +32,7 @@ export interface ChatRequest {
 export interface ChatResponse {
   response: string;
   session_id: string;
+  agent?: string;
 }
 
 /**
@@ -288,6 +289,7 @@ export interface DoneEvent extends StreamEvent {
   type: 'done';
   tokens?: number;
   time?: number;
+  agent?: string;
 }
 
 /**

@@ -9,6 +9,8 @@
  */
 
 import { useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 /**
  * Represents a single message in the conversation
@@ -22,6 +24,8 @@ export interface Message {
   role: 'user' | 'assistant' | 'error';
   /** When the message was created */
   timestamp: Date;
+  /** Which specialist agent handled the query (for assistant messages) */
+  agent?: string;
 }
 
 interface MessageListProps {
@@ -70,16 +74,15 @@ export default function MessageList({ messages, isLoading = false }: MessageList
     <div className="flex h-full flex-col overflow-y-auto px-4 py-6">
       {/* Empty state - no messages yet */}
       {messages.length === 0 && !isLoading && (
-        <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
+        <div className="flex h-full items-center justify-center p-6">
+          <div className="w-full max-w-3xl">
+            <div className="mb-6 text-center">
+              <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
                 <svg
                   className="h-8 w-8 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
                     strokeLinecap="round"
@@ -89,13 +92,60 @@ export default function MessageList({ messages, isLoading = false }: MessageList
                   />
                 </svg>
               </div>
+              <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-gray-50">
+                Welcome to AI Customer Service
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Multi-agent AI system for technical, billing, general, and compliance support
+              </p>
             </div>
-            <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-50">
-              Start a Conversation
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Send a message to begin chatting with the AI assistant
-            </p>
+            
+            <div className="mt-6">
+              <p className="mb-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                Try these examples:
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="group cursor-pointer rounded-lg border-2 border-gray-200 bg-white p-3 text-left transition-all hover:border-blue-500 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-lg">🔧</span>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Technical</span>
+                  </div>
+                  <p className="text-sm text-gray-900 dark:text-gray-50">
+                    "I'm getting Error 500"
+                  </p>
+                </div>
+                
+                <div className="group cursor-pointer rounded-lg border-2 border-gray-200 bg-white p-3 text-left transition-all hover:border-purple-500 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-lg">💰</span>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Billing</span>
+                  </div>
+                  <p className="text-sm text-gray-900 dark:text-gray-50">
+                    "What are your pricing plans?"
+                  </p>
+                </div>
+                
+                <div className="group cursor-pointer rounded-lg border-2 border-gray-200 bg-white p-3 text-left transition-all hover:border-green-500 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-lg">ℹ️</span>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">General</span>
+                  </div>
+                  <p className="text-sm text-gray-900 dark:text-gray-50">
+                    "What services do you offer?"
+                  </p>
+                </div>
+                
+                <div className="group cursor-pointer rounded-lg border-2 border-gray-200 bg-white p-3 text-left transition-all hover:border-red-500 hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="text-lg">🔒</span>
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Compliance</span>
+                  </div>
+                  <p className="text-sm text-gray-900 dark:text-gray-50">
+                    "What's your data retention policy?"
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -127,6 +177,14 @@ export default function MessageList({ messages, isLoading = false }: MessageList
                 >
                   {message.role === 'user' ? 'You' : message.role === 'error' ? 'Error' : 'AI Assistant'}
                 </span>
+                
+                {/* Agent specialist badge */}
+                {message.role === 'assistant' && message.agent && (
+                  <span className="rounded-full bg-gradient-to-r from-blue-500 to-purple-500 px-2 py-0.5 text-xs font-medium text-white">
+                    {message.agent}
+                  </span>
+                )}
+                
                 <span className="text-xs text-gray-500 dark:text-gray-500">
                   {formatTime(message.timestamp)}
                 </span>
@@ -134,7 +192,7 @@ export default function MessageList({ messages, isLoading = false }: MessageList
 
               {/* Message bubble */}
               <div
-                className={`rounded-2xl px-4 py-3 ${
+                className={`rounded-2xl px-5 py-4 ${
                   message.role === 'user'
                     ? 'bg-blue-600 text-white dark:bg-blue-500'
                     : message.role === 'error'
@@ -142,9 +200,86 @@ export default function MessageList({ messages, isLoading = false }: MessageList
                     : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
                 }`}
               >
-                <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                  {message.content}
-                </p>
+                {message.role === 'user' ? (
+                  // User messages - simple text
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                    {message.content}
+                  </p>
+                ) : (
+                  // AI/Error messages - rendered markdown with better formatting
+                  <div className="prose prose-sm prose-slate dark:prose-invert max-w-none">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        // Custom styling for inline code
+                        code: ({node, inline, className, children, ...props}: any) => {
+                          return inline ? (
+                            <code className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-xs font-mono text-gray-900 dark:text-gray-100" {...props}>
+                              {children}
+                            </code>
+                          ) : (
+                            <code className="block bg-gray-800 dark:bg-gray-950 text-gray-100 p-4 rounded-lg text-xs font-mono overflow-x-auto my-3" {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        // Better pre (code block container) styling
+                        pre: ({node, ...props}: any) => (
+                          <pre className="!bg-transparent !p-0 !m-0" {...props} />
+                        ),
+                        // Better table styling
+                        table: ({node, ...props}: any) => (
+                          <div className="overflow-x-auto my-4 -mx-1">
+                            <table className="min-w-full border-collapse text-sm" {...props} />
+                          </div>
+                        ),
+                        thead: ({node, ...props}: any) => (
+                          <thead className="bg-gray-200 dark:bg-gray-700" {...props} />
+                        ),
+                        th: ({node, ...props}: any) => (
+                          <th className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-left font-semibold text-xs" {...props} />
+                        ),
+                        td: ({node, ...props}: any) => (
+                          <td className="border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs" {...props} />
+                        ),
+                        // Better list styling
+                        ul: ({node, ...props}: any) => (
+                          <ul className="!list-disc !list-outside !ml-5 space-y-1 my-2" {...props} />
+                        ),
+                        ol: ({node, ...props}: any) => (
+                          <ol className="!list-decimal !list-outside !ml-5 space-y-1 my-2" {...props} />
+                        ),
+                        li: ({node, ...props}: any) => (
+                          <li className="text-sm leading-relaxed" {...props} />
+                        ),
+                        // Better heading styles
+                        h1: ({node, ...props}: any) => (
+                          <h1 className="text-lg font-bold mt-4 mb-2 text-gray-900 dark:text-gray-100" {...props} />
+                        ),
+                        h2: ({node, ...props}: any) => (
+                          <h2 className="text-base font-bold mt-3 mb-2 text-gray-900 dark:text-gray-100" {...props} />
+                        ),
+                        h3: ({node, ...props}: any) => (
+                          <h3 className="text-sm font-semibold mt-2 mb-1 text-gray-900 dark:text-gray-100" {...props} />
+                        ),
+                        // Paragraph styling
+                        p: ({node, ...props}: any) => (
+                          <p className="text-sm leading-relaxed my-2 text-gray-900 dark:text-gray-100" {...props} />
+                        ),
+                        // Blockquote styling
+                        blockquote: ({node, ...props}: any) => (
+                          <blockquote className="border-l-4 border-blue-500 pl-4 italic my-3 text-gray-700 dark:text-gray-300" {...props} />
+                        ),
+                        // Horizontal rule
+                        hr: ({node, ...props}: any) => (
+                          <hr className="my-4 border-gray-300 dark:border-gray-600" {...props} />
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
             </div>
           </div>
