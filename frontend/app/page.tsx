@@ -24,22 +24,21 @@ export default function Home() {
   // Show loading state during SSR or if session isn't ready
   if (!isClient || !sessionId) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="flex h-screen items-center justify-center bg-slate-950">
         <div className="text-center">
           <div className="mb-4 flex justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Loading...</p>
+          <p className="text-sm text-slate-400">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-gray-50 dark:bg-gray-950">
-      {/* Chat Interface */}
+    <main style={{ height: '100vh', width: '100vw', overflow: 'hidden', backgroundColor: '#020617', color: 'white' }}>
       <ChatInterface sessionId={sessionId} onClearSession={handleClearSession} />
-    </div>
+    </main>
   );
 }
 

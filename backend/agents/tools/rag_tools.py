@@ -14,14 +14,11 @@ Last Updated: November 4, 2025
 
 import logging
 from pathlib import Path
-from typing import Annotated
 
-from dotenv import load_dotenv
-from langchain.tools import tool, ToolRuntime
-from langgraph.types import Command
-
-from data.vectorstore import get_vectorstore
 from data.document_loader import load_single_document
+from data.vectorstore import get_vectorstore
+from dotenv import load_dotenv
+from langchain.tools import tool
 
 # Load environment variables (with override for cached env vars)
 load_dotenv(override=True)
@@ -160,19 +157,19 @@ def general_docs_search(query: str) -> str:
 
 
 # ============================================================================
-# Strategy 2: Hybrid RAG/CAG (Billing Support)
+# Strategy 2: Pure RAG for Billing (simplified for compatibility)
 # ============================================================================
-# First query: RAG (retrieve from vector store)
-# Subsequent queries: CAG (use cached results from state)
-# Use case: Static policies that rarely change, high query volume
+# Dynamic retrieval: Search vector store on EVERY query
+# Note: Original Hybrid RAG/CAG with ToolRuntime caused JSON schema issues
+# when used in nested agents. Simplified to Pure RAG for reliability.
 # ============================================================================
+
+# Module-level cache for billing policies (simple caching without ToolRuntime)
+_billing_cache: dict[str, str] = {}
 
 
 @tool
-def billing_docs_search(
-    query: str,
-    runtime: Annotated[ToolRuntime, "Runtime context with state access"]
-) -> Command:
+def billing_docs_search(query: str) -> str:
     """Search billing policies, pricing, refunds, and subscription information.
     
     Use this tool when users ask about:
@@ -183,51 +180,34 @@ def billing_docs_search(
     - Pricing information and plans
     - Billing errors or disputes
     
-    Strategy: Hybrid RAG/CAG - retrieves policies on first query, caches for session.
-    This improves performance since billing policies rarely change within a conversation.
+    Strategy: Pure RAG - searches vector store every query for latest information.
     
     Args:
         query: The user's billing question
-        runtime: Tool runtime context with state access
         
     Returns:
-        Command with billing information and cached state
+        Relevant billing documentation with sources
         
     Example:
-        >>> response = billing_docs_search("What's your refund policy?", runtime)
-        >>> print(response.result)
+        >>> response = billing_docs_search("What's your refund policy?")
+        >>> print(response)
     """
-    logger.info(f"[HYBRID RAG/CAG] Billing docs search: {query[:50]}...")
+    logger.info(f"[PURE RAG] Billing docs search: {query[:50]}...")
     
     try:
-        # Check if we already have cached billing policies (CAG)
-        cached_policies = runtime.state.get("billing_policies")
-        
-        if cached_policies:
-            logger.info("[HYBRID RAG/CAG] Using cached billing policies (CAG)")
-            # Return cached content directly (no state update needed)
-            return cached_policies
-        
-        # First time: Retrieve from vector store (RAG)
-        logger.info("[HYBRID RAG/CAG] First query - retrieving from vector store (RAG)")
+        # Get billing vector store
         vectorstore = get_vectorstore("billing")
         
         if vectorstore is None:
             logger.error("Billing vector store not available")
-            return Command(
-                update={"billing_policies": "unavailable"},
-                goto="__end__"
-            )
+            return "Billing information is currently unavailable. Please try again later."
         
-        # Search vector store
+        # Search vector store (Pure RAG - always retrieves fresh)
         docs = vectorstore.similarity_search(query, k=3)
         
         if not docs:
             logger.warning(f"No billing docs found for query: {query[:50]}...")
-            return Command(
-                update={"billing_policies": "no_results"},
-                goto="__end__"
-            )
+            return "I couldn't find specific billing information for that. Could you provide more details about your billing question?"
         
         # Format results with metadata
         formatted_results = []
@@ -240,21 +220,13 @@ def billing_docs_search(
             )
         
         response = "\n\n".join(formatted_results)
-        logger.info(f"[HYBRID RAG/CAG] Retrieved {len(docs)} docs, caching for session")
+        logger.info(f"[PURE RAG] Billing docs: Retrieved {len(docs)} documents")
         
-        # Cache the policies for this session (CAG for subsequent queries)
-        # Return Command to update state
-        return Command(
-            update={"billing_policies": response},
-            goto="__end__"
-        )
+        return response
         
     except Exception as e:
         logger.error(f"Error in billing_docs_search: {e}", exc_info=True)
-        return Command(
-            update={"billing_policies": "error"},
-            goto="__end__"
-        )
+        return "An error occurred while searching billing information. Please try again."
 
 
 # ============================================================================

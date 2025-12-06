@@ -233,150 +233,93 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
   };
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4 dark:border-gray-700 dark:bg-gray-900">
-        <div className="flex items-center gap-3">
-          {/* Chat icon */}
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-            <svg
-              className="h-5 w-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
-          </div>
-          
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
-              AI Assistant
-            </h2>
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {messages.length === 0 ? 'Ready to help' : `${messages.filter(m => m.role !== 'error').length} messages`}
-            </p>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex items-center gap-2">
-          {/* Streaming toggle */}
-          <button
-            onClick={() => setUseStreaming(!useStreaming)}
-            disabled={isLoading}
-            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-              useStreaming
-                ? 'border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50'
-                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-            } dark:focus:ring-offset-gray-900`}
-            aria-label={useStreaming ? 'Disable streaming' : 'Enable streaming'}
-            title={useStreaming ? 'Streaming enabled (real-time)' : 'Streaming disabled'}
-          >
-            <div className="flex items-center gap-2">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {useStreaming ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                )}
+    <div style={{ display: 'flex', height: '100%', width: '100%', flexDirection: 'column' }}>
+      {/* Compact header */}
+      <div className="border-b border-white/10 bg-slate-900/50 px-6 py-4">
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
-              <span className="hidden sm:inline">{useStreaming ? 'Streaming' : 'Standard'}</span>
             </div>
-          </button>
+            <div>
+              <h1 className="text-lg font-semibold text-white">AI Customer Service</h1>
+              <p className="text-xs text-slate-400">Technical • Billing • Compliance • General</p>
+            </div>
+          </div>
 
-          {/* Export conversation button */}
-          {messages.length > 0 && (
-            <button
-              onClick={handleExportConversation}
-              disabled={isLoading}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
-              aria-label="Export conversation"
-              title="Download conversation as text file"
-            >
-              <div className="flex items-center gap-2">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Export</span>
-              </div>
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {/* Status indicator */}
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <span className={`h-2 w-2 rounded-full ${isLoading ? 'animate-pulse bg-yellow-400' : 'bg-emerald-400'}`} />
+              {isLoading ? 'Responding...' : `${messages.filter(m => m.role !== 'error').length} messages`}
+            </div>
 
-          {/* Clear conversation button */}
-          {messages.length > 0 && (
-            <button
-              onClick={handleClearConversation}
-              disabled={isLoading}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:focus:ring-offset-gray-900"
-              aria-label="Clear conversation"
-            >
-              <div className="flex items-center gap-2">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-                <span className="hidden sm:inline">Clear</span>
-              </div>
-            </button>
-          )}
+            {/* Action buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setUseStreaming(!useStreaming)}
+                disabled={isLoading}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
+                  useStreaming
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`}
+                title={useStreaming ? 'Streaming mode' : 'Standard mode'}
+              >
+                {useStreaming ? '⚡ Stream' : '+ Standard'}
+              </button>
+
+              {messages.length > 0 && (
+                <>
+                  <button
+                    onClick={handleExportConversation}
+                    disabled={isLoading}
+                    className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
+                    title="Export chat"
+                  >
+                    ↓ Export
+                  </button>
+                  <button
+                    onClick={handleClearConversation}
+                    disabled={isLoading}
+                    className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-red-900/50 hover:text-red-300 disabled:opacity-50"
+                    title="Clear chat"
+                  >
+                    ✕ Clear
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-hidden bg-gray-50 dark:bg-gray-950">
-        <MessageList messages={messages} isLoading={isLoading} />
+      {/* Conversation area */}
+      <div style={{ flex: 1, overflow: 'hidden', background: 'linear-gradient(to bottom, #0f172a, #020617)', width: '100%' }}>
+        <MessageList 
+          messages={messages} 
+          isLoading={isLoading} 
+          onExampleClick={handleSendMessage}
+        />
       </div>
 
       {/* Input area */}
-      <MessageInput
-        onSendMessage={handleSendMessage}
-        disabled={isLoading}
-        placeholder="Ask me anything..."
-      />
+      <div style={{ 
+        borderTop: '1px solid rgba(255,255,255,0.1)', 
+        backgroundColor: 'rgba(15, 23, 42, 0.8)',
+        padding: '16px',
+        width: '100%'
+      }}>
+        <div style={{ margin: '0 auto', maxWidth: '500px', width: '100%' }}>
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            disabled={isLoading}
+            placeholder="Type your question..."
+          />
+        </div>
+      </div>
     </div>
   );
 }
