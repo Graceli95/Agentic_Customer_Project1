@@ -8,13 +8,21 @@ Last Updated: November 1, 2025
 
 ## Table of Contents
 
-1. [High-Level System Flow](#1-high-level-system-flow)
-2. [Detailed Request-Response Flow](#2-detailed-request-response-flow)
-3. [Agent Routing Decision Flow](#3-agent-routing-decision-flow)
-4. [Retrieval Strategy Comparison](#4-retrieval-strategy-comparison)
-5. [Phase 6: Dynamic Model Selection](#5-phase-6-dynamic-model-selection)
-6. [Data Ingestion Pipeline](#6-data-ingestion-pipeline)
-7. [Conversation State Management](#7-conversation-state-management)
+- [Project Flowcharts: Advanced Customer Service AI](#project-flowcharts-advanced-customer-service-ai)
+  - [Table of Contents](#table-of-contents)
+  - [1. High-Level System Flow](#1-high-level-system-flow)
+  - [2. Detailed Request-Response Flow](#2-detailed-request-response-flow)
+  - [3. Agent Routing Decision Flow](#3-agent-routing-decision-flow)
+  - [4. Retrieval Strategy Comparison](#4-retrieval-strategy-comparison)
+  - [5. Phase 6: Dynamic Model Selection](#5-phase-6-dynamic-model-selection)
+  - [6. Data Ingestion Pipeline](#6-data-ingestion-pipeline)
+  - [7. Conversation State Management](#7-conversation-state-management)
+  - [How to Use These Flowcharts](#how-to-use-these-flowcharts)
+    - [Viewing in Markdown Editors](#viewing-in-markdown-editors)
+    - [Exporting as Images](#exporting-as-images)
+    - [Customizing Diagrams](#customizing-diagrams)
+  - [Quick Reference: Diagram Types](#quick-reference-diagram-types)
+  - [Integration with Documentation](#integration-with-documentation)
 
 ---
 
@@ -31,9 +39,9 @@ graph TB
     
     Super -->|Analyze Query| Decision{Query Type?}
     
-    Decision -->|"Technical Issue"| Tech[Technical Support Agent<br/>GPT-5 + Pure RAG]
-    Decision -->|"Billing Question"| Bill[Billing Support Agent<br/>GPT-5 + Hybrid RAG/CAG]
-    Decision -->|"Policy Question"| Pol[Policy & Compliance Agent<br/>GPT-5 + Pure CAG]
+    Decision -->|"Technical Issue"| Tech[Technical Support Agent<br/>GPT-4o-mini + Pure RAG]
+    Decision -->|"Billing Question"| Bill[Billing Support Agent<br/>GPT-4o-mini + Hybrid RAG/CAG]
+    Decision -->|"Policy Question"| Pol[Policy & Compliance Agent<br/>GPT-4o-mini + Pure CAG]
     
     Tech -->|Search Vector DB| VDB[(ChromaDB)]
     VDB -->|Return Docs| Tech
@@ -81,7 +89,7 @@ sequenceDiagram
     participant Supervisor
     participant TechAgent as Technical Agent
     participant ChromaDB
-    participant GPT5 as OpenAI GPT-5
+    participant GPT4o as OpenAI GPT-4o-mini
     
     User->>Frontend: Types "My app crashes on startup"
     Frontend->>Frontend: Generate/Get session_id (UUID)
@@ -116,7 +124,7 @@ sequenceDiagram
 1. **Frontend** (~50ms): User input, validation
 2. **API** (~20ms): Request parsing
 3. **Supervisor** (~200ms): Nova Lite routing decision
-4. **Worker** (~1500ms): ChromaDB search + GPT-5 generation
+4. **Worker** (~1500ms): ChromaDB search + GPT-4o-mini generation
 5. **Response** (~50ms): Format and return
 6. **Total**: ~1.8 seconds end-to-end
 
@@ -148,10 +156,10 @@ graph TD
     BillCheck -->|No| BillRAG[Hybrid RAG:<br/>Search + Cache]
     BillCheck -->|Yes| BillCAG[Use Cached<br/>Policies]
     
-    TechRAG --> GPT5_1[GPT-5 Generate]
-    BillRAG --> GPT5_2[GPT-5 Generate]
-    BillCAG --> GPT5_3[GPT-5 Generate]
-    PolCAG --> GPT5_4[GPT-5 Generate]
+    TechRAG --> GPT4o_1[GPT-4o-mini Generate]
+    BillRAG --> GPT4o_2[GPT-4o-mini Generate]
+    BillCAG --> GPT4o_3[GPT-4o-mini Generate]
+    PolCAG --> GPT4o_4[GPT-4o-mini Generate]
     
     GPT5_1 --> Return1[Return to Supervisor]
     GPT5_2 --> Return2[Return to Supervisor]
@@ -193,7 +201,7 @@ graph LR
         T1[Query Received] --> T2[Search ChromaDB]
         T2 --> T3[Retrieve Fresh Docs]
         T3 --> T4[Inject Context]
-        T4 --> T5[GPT-5 Generate]
+        T4 --> T5[GPT-4o-mini Generate]
         T5 --> T6[Return Response]
         
         style T2 fill:#a8e6cf
@@ -207,7 +215,7 @@ graph LR
         B3 --> B4[Cache Results]
         B4 --> B5[Use Cached Context]
         B2 -->|Yes| B5
-        B5 --> B6[GPT-5 Generate]
+        B5 --> B6[GPT-4o-mini Generate]
         B6 --> B7[Return Response]
         
         style B3 fill:#a8e6cf
@@ -219,7 +227,7 @@ graph LR
         direction TB
         P1[Query Received] --> P2[Use Pre-loaded Docs]
         P2 --> P3[Static Context]
-        P3 --> P4[GPT-5 Generate]
+        P3 --> P4[GPT-4o-mini Generate]
         P4 --> P5[Return Response]
         
         style P2 fill:#ff8b94

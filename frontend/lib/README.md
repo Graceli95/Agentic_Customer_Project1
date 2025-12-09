@@ -1,172 +1,165 @@
 # Lib Directory
 
-This directory contains utility functions, API clients, constants, and shared logic for the Customer Service AI application.
+This directory contains utility functions, API clients, and shared logic for the Customer Service AI frontend.
 
-## Structure
+## Current Structure
 
 ```
 lib/
-├── api/             # API client and backend communication
-├── utils/           # Utility functions and helpers
-├── hooks/           # Custom React hooks
-├── constants/       # Application constants
-├── types/           # Shared TypeScript types
-└── validators/      # Input validation functions
+├── api.ts             # Backend API client (standard + SSE streaming)
+├── sessionManager.ts  # Session ID management with localStorage
+├── utils/             # Utility functions
+│   └── cn.ts         # Tailwind class name utility
+└── README.md          # This file
 ```
 
-## What Goes Here
+## Files
 
-### API Layer (`lib/api/`)
-- API client configuration
-- Backend communication functions
-- Request/response interceptors
-- Error handling utilities
+### `api.ts` - API Client
 
-### Utils (`lib/utils/`)
-- Pure utility functions
-- String formatters
-- Date/time helpers
-- Data transformations
+The main API client for communicating with the FastAPI backend.
 
-### Hooks (`lib/hooks/`)
-- Custom React hooks
-- Reusable stateful logic
-- Side effect management
+**Features:**
+- Standard chat endpoint (`sendChatMessage`)
+- SSE streaming endpoint (`sendChatMessageStream`)
+- Health check (`checkBackendHealth`)
+- Comprehensive error handling with `ApiError` class
+- User-friendly error messages with `formatErrorMessage`
 
-### Constants (`lib/constants/`)
-- Configuration values
-- Enum-like objects
-- Fixed data structures
+**Key Exports:**
 
-### Types (`lib/types/`)
-- Shared TypeScript interfaces
-- Type definitions
-- API response types
-
-### Validators (`lib/validators/`)
-- Form validation functions
-- Input sanitization
-- Data validation schemas
-
-## Example Files
-
-### API Client (`lib/api/client.ts`)
 ```typescript
-import axios from 'axios';
+// Standard chat (non-streaming)
+export async function sendChatMessage(
+  message: string,
+  sessionId: string
+): Promise<ChatResponse>
 
-const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+// Streaming chat (SSE)
+export async function sendChatMessageStream(
+  message: string,
+  sessionId: string,
+  onEvent: StreamCallback,
+  onComplete?: () => void,
+  onError?: (error: ApiError) => void
+): Promise<void>
 
-export default apiClient;
+// Health check
+export async function checkBackendHealth(): Promise<boolean>
+
+// Error formatting
+export function formatErrorMessage(error: unknown): string
 ```
 
-### Utility Function (`lib/utils/format.ts`)
-```typescript
-export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(date);
-}
+**Types:**
+- `ChatRequest` - Request payload for chat endpoint
+- `ChatResponse` - Response from chat endpoint
+- `ChatStreamEvent` - Union type for SSE events
+- `ApiError` - Custom error class with status codes
 
-export function truncate(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
-  return text.slice(0, maxLength) + '...';
+**Usage Example:**
+
+```typescript
+import { sendChatMessage, formatErrorMessage } from '@/lib/api';
+
+try {
+  const response = await sendChatMessage("Hello!", sessionId);
+  console.log(response.response);
+  console.log(response.agent); // "Technical Support" | "Billing Support" | etc.
+} catch (error) {
+  const userMessage = formatErrorMessage(error);
+  showError(userMessage);
 }
 ```
 
-### Custom Hook (`lib/hooks/useChat.ts`)
+---
+
+### `sessionManager.ts` - Session Management
+
+Manages user session IDs for conversation tracking with localStorage persistence.
+
+**Features:**
+- UUID v4 generation with `crypto.randomUUID()` fallback
+- localStorage persistence across page refreshes
+- SSR-safe (handles server-side rendering)
+- Session validation
+
+**Key Exports:**
+
 ```typescript
-import { useState, useCallback } from 'react';
-import { sendMessage } from '@/lib/api/chat';
+// Get or create session ID
+export function getOrCreateSessionId(): string
 
-export function useChat() {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+// Clear session and generate new one
+export function clearSession(): string
 
-  const send = useCallback(async (content: string) => {
-    setIsLoading(true);
-    try {
-      const response = await sendMessage(content);
-      setMessages(prev => [...prev, response]);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+// Validate UUID format
+export function isValidUUID(uuid: string): boolean
 
-  return { messages, isLoading, send };
-}
+// Ensure valid session ID
+export function ensureValidSessionId(): string
 ```
 
-### Constants (`lib/constants/config.ts`)
-```typescript
-export const APP_CONFIG = {
-  name: process.env.NEXT_PUBLIC_APP_NAME || 'Customer Service AI',
-  version: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
-  maxMessageLength: parseInt(process.env.NEXT_PUBLIC_MAX_MESSAGE_LENGTH || '2000'),
-  chatHistoryLimit: parseInt(process.env.NEXT_PUBLIC_CHAT_HISTORY_LIMIT || '50'),
-} as const;
+**Usage Example:**
 
-export const MESSAGE_ROLES = {
-  USER: 'user',
-  ASSISTANT: 'assistant',
-  SYSTEM: 'system',
-} as const;
+```typescript
+import { getOrCreateSessionId, clearSession } from '@/lib/sessionManager';
+
+// On page load
+const sessionId = getOrCreateSessionId();
+
+// When user clicks "Clear Conversation"
+const newSessionId = clearSession();
 ```
 
-### Type Definitions (`lib/types/chat.ts`)
-```typescript
-export interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant' | 'system';
-  timestamp: Date;
-}
+---
 
-export interface ChatSession {
-  id: string;
-  messages: Message[];
-  createdAt: Date;
-  updatedAt: Date;
-}
+### `utils/cn.ts` - Class Name Utility
+
+A utility function for conditionally joining Tailwind CSS class names.
+
+**Features:**
+- Merges Tailwind classes intelligently
+- Handles conditional classes
+- Resolves conflicts (e.g., `px-2` vs `px-4`)
+
+**Usage Example:**
+
+```typescript
+import { cn } from '@/lib/utils/cn';
+
+<div className={cn(
+  "base-classes px-4 py-2",
+  isActive && "bg-blue-500",
+  isError && "bg-red-500",
+  className
+)} />
 ```
+
+---
 
 ## Best Practices
 
-1. **Keep functions pure** - Avoid side effects in utility functions
-2. **Use TypeScript** - Properly type all functions and exports
-3. **Document complex logic** - Add JSDoc comments for clarity
-4. **Test utilities** - Write unit tests for critical functions
-5. **Avoid circular dependencies** - Keep imports clean and unidirectional
-6. **Export named functions** - Use named exports for better tree-shaking
-7. **Handle errors gracefully** - Always handle potential failures
-8. **Use environment variables** - Leverage Next.js env vars for configuration
-
-## Path Aliases
-
-Use Next.js path aliases for cleaner imports:
+1. **Use TypeScript** - All files are fully typed
+2. **Handle errors gracefully** - Always use try/catch with ApiError
+3. **SSR Safety** - Check for browser environment before using localStorage
+4. **Import via aliases** - Use `@/lib/...` for cleaner imports
 
 ```typescript
-// Instead of: import { formatDate } from '../../../lib/utils/format';
-import { formatDate } from '@/lib/utils/format';
-
-// Instead of: import apiClient from '../../lib/api/client';
-import apiClient from '@/lib/api/client';
+// Preferred import style
+import { sendChatMessage, ApiError } from '@/lib/api';
+import { getOrCreateSessionId } from '@/lib/sessionManager';
+import { cn } from '@/lib/utils/cn';
 ```
 
-The `@/` alias points to the `frontend/` root directory (configured in `tsconfig.json`).
+---
 
 ## Resources
 
-- [Next.js App Directory](https://nextjs.org/docs/app)
-- [TypeScript Best Practices](https://typescript-eslint.io/rules/)
-- [React Hooks](https://react.dev/reference/react)
+- [Next.js API Routes](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
+- [Server-Sent Events (SSE)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
+- [Web Crypto API](https://developer.mozilla.org/en-US/docs/Web/API/Crypto/randomUUID)
 
+---
+
+**Last Updated**: December 9, 2025

@@ -306,13 +306,8 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
       </div>
 
       {/* Input area */}
-      <div style={{ 
-        borderTop: '1px solid rgba(255,255,255,0.1)', 
-        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-        padding: '16px',
-        width: '100%'
-      }}>
-        <div style={{ margin: '0 auto', maxWidth: '500px', width: '100%' }}>
+      <div className="border-t border-white/10 bg-slate-900/80">
+        <div style={{ margin: '0 auto', width: '100%', maxWidth: '900px', padding: '16px' }}>
           <MessageInput
             onSendMessage={handleSendMessage}
             disabled={isLoading}

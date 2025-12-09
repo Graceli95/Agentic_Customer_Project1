@@ -2,7 +2,7 @@
 
 **Project**: Multi-Agent Customer Service Application  
 **Version**: 1.0  
-**Last Updated**: November 1, 2025  
+**Last Updated**: December 9, 2025  
 **Development Methodology**: Vibe Coding Strategy
 
 ---
@@ -80,8 +80,8 @@ This project implements a sophisticated, proof-of-concept customer service appli
 │  │  ┌─────────────────┐ ┌──────────────┐ ┌───────────────┐ │  │
 │  │  │  Technical      │ │  Billing     │ │  Policy &     │ │  │
 │  │  │  Support Agent  │ │  Support     │ │  Compliance   │ │  │
-│  │  │  (GPT-5)        │ │  Agent       │ │  Agent        │ │  │
-│  │  │                 │ │  (GPT-5)     │ │  (GPT-5)      │ │  │
+│  │  │  (GPT-4o-mini)  │ │  Agent       │ │  Agent        │ │  │
+│  │  │                 │ │  (GPT-4o-mi) │ │  (GPT-4o-mi)  │ │  │
 │  │  │  Strategy:      │ │  Strategy:   │ │  Strategy:    │ │  │
 │  │  │  Pure RAG       │ │  Hybrid      │ │  Pure CAG     │ │  │
 │  │  │  (Always search)│ │  RAG/CAG     │ │  (Static)     │ │  │
@@ -107,7 +107,7 @@ This project implements a sophisticated, proof-of-concept customer service appli
 └─────────────────────────────────────────────────────────────────┘
 
 External Services:
-  • OpenAI API (GPT-5, text-embedding-3-small)
+  • OpenAI API (GPT-4o-mini, text-embedding-3-small)
   • AWS Bedrock (Nova Lite, optional Claude 3.5 Haiku)
   • LangSmith (optional observability)
 ```
@@ -118,7 +118,7 @@ External Services:
 2. **Scalability**: Modular design allows easy addition of new agents
 3. **Cost Optimization**: Strategic model selection based on task requirements
 4. **Stateful Design**: Conversation history and session context maintained
-5. **Performance**: Fast routing with Nova Lite, quality responses with GPT-5
+5. **Performance**: Fast routing with Nova Lite, quality responses with GPT-4o-mini
 
 ---
 
@@ -719,7 +719,7 @@ if __name__ == "__main__":
 |----------|-------|---------|------|
 | AWS Bedrock | **Nova Lite** | Supervisor routing (Baseline) | $0.00006 / 1K input |
 | AWS Bedrock | Claude 3.5 Haiku | Supervisor routing (Phase 6) | $0.0008 / 1K input |
-| OpenAI | **GPT-5** | Worker agent responses | Premium |
+| OpenAI | **GPT-4o-mini** | Worker agent responses | $0.15/1M tokens |
 | OpenAI | text-embedding-3-small | Vector embeddings | $0.00002 / 1K tokens |
 
 ### Development Tools
@@ -744,8 +744,8 @@ Supervisor Agent: AWS Bedrock Nova Lite
 ├─ Latency: Ultra-low
 └─ Sufficient for straightforward routing decisions
 
-Worker Agents: OpenAI GPT-5
-├─ Rationale: Highest quality customer-facing responses
+Worker Agents: OpenAI GPT-4o-mini
+├─ Rationale: High quality responses at low cost
 ├─ Features: Enhanced reasoning, conversation continuity
 └─ Use: Where response quality directly impacts user experience
 ```
@@ -759,13 +759,13 @@ Worker Agents: OpenAI GPT-5
 
 **Performance Optimization**
 - Nova Lite: Ultra-low latency routing (~100-200ms)
-- GPT-5: High-quality responses worth the wait (~1-2s)
+- GPT-4o-mini: High-quality responses worth the wait (~1-2s)
 - Total response time: Competitive with single-model approaches
 
 **Quality Where It Matters**
 - Routing decisions are simple: "Which agent?"
 - Customer responses are complex: Require reasoning, empathy, accuracy
-- Premium model (GPT-5) allocated to high-impact component
+- Quality model (GPT-4o-mini) allocated to high-impact component
 
 ---
 
@@ -794,12 +794,12 @@ Worker Agents: OpenAI GPT-5
    └─> Decides to call technical_support_tool
        └─> Tool call: technical_support_tool("My app keeps crashing...")
 
-5. TECHNICAL SUPPORT WORKER (GPT-5)
+5. TECHNICAL SUPPORT WORKER (GPT-4o-mini)
    └─> Searches ChromaDB vector store
        └─> query="app crash startup"
            └─> Retrieves top 3 relevant documents
                └─> Injects context into agent system prompt
-                   └─> GPT-5 generates answer using context
+                   └─> GPT-4o-mini generates answer using context
                        └─> Returns: "Try these steps: 1. Clear cache..."
 
 6. SUPERVISOR RECEIVES RESULT
@@ -1394,7 +1394,7 @@ class ModelSelectionMetrics:
 This architecture is designed to be built incrementally across 6 phases:
 
 1. **Phase 1**: Project skeleton (backend + frontend communication)
-2. **Phase 2**: Simple agent foundation (single agent with GPT-5)
+2. **Phase 2**: Simple agent foundation (single agent with GPT-4o-mini)
 3. **Phase 3**: Supervisor + first worker (multi-agent pattern)
 4. **Phase 4**: Remaining workers (complete agent system)
 5. **Phase 5**: RAG/CAG implementation (retrieval strategies)

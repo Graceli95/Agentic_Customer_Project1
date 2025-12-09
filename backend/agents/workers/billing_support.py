@@ -5,22 +5,109 @@ This module creates a specialized billing support agent that handles
 payment, invoice, subscription, and refund queries. It's called as a tool
 by the supervisor agent using the tool-calling pattern.
 
+Hybrid RAG/CAG Strategy:
+- First billing query: RAG retrieves static policies, caches them for session
+- Subsequent queries: Uses cached policies (CAG) + dynamic RAG for specific queries
+- Benefits: Fast responses for policy questions, fresh data for dynamic queries
+
 Phase: 4 - Additional Worker Agents
 Phase: 5 - RAG/CAG Integration (Hybrid RAG/CAG strategy)
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/multi-agent
-Last Updated: November 4, 2025
+Last Updated: December 8, 2025
 """
 
+import logging
+import os
+from pathlib import Path
+
+# Import RAG tool for dynamic billing queries and vectorstore for caching
+from agents.tools.rag_tools import billing_docs_search
+from data.vectorstore import get_vectorstore
 from langchain.agents import create_agent
 from langchain.tools import tool
-import os
-import logging
-
-# Import Hybrid RAG/CAG tool for billing documentation
-from agents.tools.rag_tools import billing_docs_search
 
 logger = logging.getLogger(__name__)
+
+# ============================================================================
+# Hybrid RAG/CAG: Session-Level Policy Cache
+# ============================================================================
+# Static billing policies (pricing, refund policy) are cached after first RAG query
+# This provides fast, consistent answers for policy questions while allowing
+# dynamic queries for specific account/invoice information
+# ============================================================================
+
+_billing_policy_cache: dict[str, str] = {}
+
+
+def _fetch_billing_policies() -> str:
+    """
+    Fetch static billing policies via RAG and cache them (Hybrid RAG/CAG).
+    
+    This is called ONCE on first billing query. Results are cached for the
+    session to avoid repeated vector store queries for static policy information.
+    
+    Returns:
+        Combined billing policies as formatted string
+    """
+    logger.info("[HYBRID RAG/CAG] Fetching billing policies for session cache...")
+    
+    try:
+        vectorstore = get_vectorstore("billing")
+        
+        if vectorstore is None:
+            logger.error("[HYBRID RAG/CAG] Billing vector store not available")
+            return ""
+        
+        # Fetch key policy documents with broad queries
+        policy_queries = [
+            "refund policy cancellation",
+            "pricing plans subscription tiers",
+            "payment methods billing cycle",
+        ]
+        
+        all_policies = []
+        seen_content = set()  # Deduplicate
+        
+        for query in policy_queries:
+            docs = vectorstore.similarity_search(query, k=2)
+            for doc in docs:
+                # Deduplicate by content hash
+                content_hash = hash(doc.page_content[:100])
+                if content_hash not in seen_content:
+                    seen_content.add(content_hash)
+                    source = doc.metadata.get("source", "Unknown")
+                    source_file = Path(source).name if source != "Unknown" else "Unknown"
+                    all_policies.append(f"**{source_file}**\n{doc.page_content}")
+        
+        if not all_policies:
+            logger.warning("[HYBRID RAG/CAG] No billing policies found to cache")
+            return ""
+        
+        cached_content = "\n\n---\n\n".join(all_policies)
+        logger.info(f"[HYBRID RAG/CAG] Cached {len(all_policies)} billing policy documents ({len(cached_content)} chars)")
+        
+        return cached_content
+        
+    except Exception as e:
+        logger.error(f"[HYBRID RAG/CAG] Error fetching billing policies: {e}", exc_info=True)
+        return ""
+
+
+def get_cached_billing_policies() -> str:
+    """
+    Get cached billing policies, fetching if not yet cached.
+    
+    Returns:
+        Cached billing policies string
+    """
+    if "policies" not in _billing_policy_cache:
+        _billing_policy_cache["policies"] = _fetch_billing_policies()
+        logger.info("[HYBRID RAG/CAG] Billing policies cached for session")
+    else:
+        logger.info("[HYBRID RAG/CAG] Using cached billing policies")
+    
+    return _billing_policy_cache["policies"]
 
 
 def create_billing_support_agent():
@@ -206,6 +293,10 @@ def billing_support_tool(query: str) -> str:
     - Billing disputes and incorrect charges
     - Tax and VAT questions
 
+    Strategy: Hybrid RAG/CAG
+    - Static policies cached after first query (CAG behavior)
+    - Dynamic queries still search vector store (RAG behavior)
+
     Args:
         query: The user's billing or payment question
 
@@ -218,11 +309,39 @@ def billing_support_tool(query: str) -> str:
     """
     logger.info(f"Billing support tool called with query: {query[:50]}...")
 
+    # ========================================================================
+    # HYBRID RAG/CAG Implementation
+    # ========================================================================
+    # 1. Get cached billing policies (RAG on first call, cached thereafter)
+    # 2. Inject cached context into the query for the agent
+    # 3. Agent can still use billing_docs_search for dynamic queries
+    # ========================================================================
+    
+    # Get cached policies (fetches via RAG on first call, returns cache after)
+    cached_policies = get_cached_billing_policies()
+    
+    # Prepare enhanced query with cached context
+    if cached_policies:
+        enhanced_query = f"""[CACHED BILLING POLICIES - Use this information first]
+{cached_policies}
+
+---
+
+[USER QUESTION]
+{query}
+
+Note: The above policies are pre-loaded. For specific account details or dynamic information not covered above, use the billing_docs_search tool."""
+        logger.info("[HYBRID RAG/CAG] Injecting cached policies into query")
+    else:
+        # Fallback: No cached policies, use original query
+        enhanced_query = query
+        logger.warning("[HYBRID RAG/CAG] No cached policies available, using Pure RAG fallback")
+
     # Get the billing agent
     agent = get_billing_agent()
 
-    # Invoke the agent with the query
-    result = agent.invoke({"messages": [{"role": "user", "content": query}]})
+    # Invoke the agent with the enhanced query (includes cached context)
+    result = agent.invoke({"messages": [{"role": "user", "content": enhanced_query}]})
 
     # Extract the response from the last message
     response = result["messages"][-1].content

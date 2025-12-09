@@ -2,14 +2,16 @@
 Unit tests for Billing Support Worker Agent.
 
 Tests the billing support worker agent creation, tool wrapper functionality,
-and configuration without making actual API calls to OpenAI.
+Hybrid RAG/CAG caching, and configuration without making actual API calls to OpenAI.
 
 Phase: 4 - Additional Worker Agents
+Phase: 5 - RAG/CAG Integration (Hybrid RAG/CAG strategy)
 """
 
-import pytest
-from unittest.mock import Mock, patch
 import os
+from unittest.mock import Mock, patch
+
+import pytest
 
 
 # Test fixtures
@@ -41,7 +43,8 @@ class TestBillingWorkerCreation:
         call_kwargs = mock_create_agent.call_args[1]
 
         assert call_kwargs["model"] == "openai:gpt-4o-mini"
-        assert call_kwargs["tools"] == []  # Worker has no tools
+        # Worker has billing_docs_search tool for Hybrid RAG/CAG
+        assert len(call_kwargs["tools"]) == 1
         assert call_kwargs["name"] == "billing_support_agent"
         assert "system_prompt" in call_kwargs
 
@@ -164,8 +167,8 @@ class TestBillingWorkerConfiguration:
         assert "billing" in call_kwargs["name"]
 
     @patch("agents.workers.billing_support.create_agent")
-    def test_billing_worker_has_no_tools(self, mock_create_agent, mock_openai_key):
-        """Test that billing worker has no tools (Phase 4 - tools added in Phase 5+)."""
+    def test_billing_worker_has_rag_tool(self, mock_create_agent, mock_openai_key):
+        """Test that billing worker has billing_docs_search tool for Hybrid RAG/CAG."""
         from agents.workers.billing_support import create_billing_support_agent
 
         mock_agent = Mock()
@@ -174,16 +177,24 @@ class TestBillingWorkerConfiguration:
         create_billing_support_agent()
 
         call_kwargs = mock_create_agent.call_args[1]
-        assert call_kwargs["tools"] == []
+        # Phase 5: billing worker has billing_docs_search for dynamic RAG queries
+        assert len(call_kwargs["tools"]) == 1
+        assert call_kwargs["tools"][0].name == "billing_docs_search"
 
 
 class TestBillingToolWrapper:
     """Test the billing_support_tool wrapper functionality."""
 
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
     @patch("agents.workers.billing_support.get_billing_agent")
-    def test_billing_tool_wrapper_calls_agent(self, mock_get_agent, mock_openai_key):
+    def test_billing_tool_wrapper_calls_agent(
+        self, mock_get_agent, mock_get_cached, mock_openai_key
+    ):
         """Test that billing_support_tool correctly invokes the billing agent."""
         from agents.workers.billing_support import billing_support_tool
+
+        # Mock cached policies (Hybrid RAG/CAG)
+        mock_get_cached.return_value = "Cached refund policy content"
 
         # Mock the billing agent
         mock_agent = Mock()
@@ -196,11 +207,16 @@ class TestBillingToolWrapper:
         query = "I was charged twice for my subscription"
         result = billing_support_tool.invoke({"query": query})
 
-        # Verify agent was invoked with correct format
+        # Verify cached policies were fetched (Hybrid RAG/CAG)
+        mock_get_cached.assert_called_once()
+
+        # Verify agent was invoked with enhanced query containing cached context
         mock_agent.invoke.assert_called_once()
         call_args = mock_agent.invoke.call_args[0][0]
         assert call_args["messages"][0]["role"] == "user"
-        assert call_args["messages"][0]["content"] == query
+        # Query should include cached policies and original query
+        assert "CACHED BILLING POLICIES" in call_args["messages"][0]["content"]
+        assert query in call_args["messages"][0]["content"]
 
         # Verify response was extracted correctly
         assert result == "I can help you with that billing issue."
@@ -220,17 +236,22 @@ class TestBillingToolWrapper:
 
         description = billing_support_tool.description
 
-        # Should mention key billing concepts
+        # Should mention key billing concepts and Hybrid strategy
         assert any(
             word in description.lower()
             for word in ["billing", "payment", "invoice", "subscription", "refund"]
         )
+        assert "hybrid" in description.lower()
 
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
     @patch("agents.workers.billing_support.get_billing_agent")
-    def test_billing_tool_returns_string(self, mock_get_agent, mock_openai_key):
+    def test_billing_tool_returns_string(
+        self, mock_get_agent, mock_get_cached, mock_openai_key
+    ):
         """Test that billing_support_tool returns a string response."""
         from agents.workers.billing_support import billing_support_tool
 
+        mock_get_cached.return_value = "Cached policies"
         mock_agent = Mock()
         mock_response = Mock()
         mock_response.content = "Billing response text"
@@ -246,11 +267,15 @@ class TestBillingToolWrapper:
 class TestBillingWorkerResponses:
     """Test billing worker responses to various query types."""
 
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
     @patch("agents.workers.billing_support.get_billing_agent")
-    def test_billing_tool_handles_payment_query(self, mock_get_agent, mock_openai_key):
+    def test_billing_tool_handles_payment_query(
+        self, mock_get_agent, mock_get_cached, mock_openai_key
+    ):
         """Test billing tool handles payment-related queries."""
         from agents.workers.billing_support import billing_support_tool
 
+        mock_get_cached.return_value = "Cached policies"
         mock_agent = Mock()
         mock_response = Mock()
         mock_response.content = "To update your payment method, go to Account Settings"
@@ -263,11 +288,15 @@ class TestBillingWorkerResponses:
 
         assert "payment method" in result.lower() or "account" in result.lower()
 
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
     @patch("agents.workers.billing_support.get_billing_agent")
-    def test_billing_tool_handles_refund_query(self, mock_get_agent, mock_openai_key):
+    def test_billing_tool_handles_refund_query(
+        self, mock_get_agent, mock_get_cached, mock_openai_key
+    ):
         """Test billing tool handles refund requests."""
         from agents.workers.billing_support import billing_support_tool
 
+        mock_get_cached.return_value = "Cached policies"
         mock_agent = Mock()
         mock_response = Mock()
         mock_response.content = "To request a refund, please contact billing support"
@@ -278,13 +307,15 @@ class TestBillingWorkerResponses:
 
         assert "refund" in result.lower() or "billing" in result.lower()
 
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
     @patch("agents.workers.billing_support.get_billing_agent")
     def test_billing_tool_handles_subscription_query(
-        self, mock_get_agent, mock_openai_key
+        self, mock_get_agent, mock_get_cached, mock_openai_key
     ):
         """Test billing tool handles subscription management queries."""
         from agents.workers.billing_support import billing_support_tool
 
+        mock_get_cached.return_value = "Cached policies"
         mock_agent = Mock()
         mock_response = Mock()
         mock_response.content = (
@@ -321,14 +352,16 @@ class TestBillingWorkerLogging:
         log_messages = [call[0][0] for call in mock_logger.info.call_args_list]
         assert any("billing" in msg.lower() for msg in log_messages)
 
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
     @patch("agents.workers.billing_support.logger")
     @patch("agents.workers.billing_support.get_billing_agent")
     def test_billing_tool_logs_invocation(
-        self, mock_get_agent, mock_logger, mock_openai_key
+        self, mock_get_agent, mock_logger, mock_get_cached, mock_openai_key
     ):
         """Test that billing_support_tool logs when it's called."""
         from agents.workers.billing_support import billing_support_tool
 
+        mock_get_cached.return_value = "Cached policies"
         mock_agent = Mock()
         mock_response = Mock()
         mock_response.content = "Billing response"
@@ -341,5 +374,142 @@ class TestBillingWorkerLogging:
         assert mock_logger.info.called
         log_messages = [call[0][0] for call in mock_logger.info.call_args_list]
         assert any(
-            "billing" in msg.lower() or "tool" in msg.lower() for msg in log_messages
+            "billing" in msg.lower() or "hybrid" in msg.lower() for msg in log_messages
         )
+
+
+class TestHybridRAGCAGCaching:
+    """Test Hybrid RAG/CAG caching functionality for billing support."""
+
+    def test_billing_policy_cache_initially_empty(self, mock_openai_key):
+        """Test that billing policy cache starts empty."""
+        from agents.workers.billing_support import _billing_policy_cache
+
+        # Cache should be a dict (may have been populated by other tests)
+        assert isinstance(_billing_policy_cache, dict)
+
+    @patch("agents.workers.billing_support.get_vectorstore")
+    def test_fetch_billing_policies_queries_vectorstore(
+        self, mock_get_vs, mock_openai_key
+    ):
+        """Test that _fetch_billing_policies queries the billing vector store."""
+        from agents.workers.billing_support import _fetch_billing_policies
+
+        # Mock vector store
+        mock_vs = Mock()
+        mock_doc = Mock()
+        mock_doc.page_content = "Refund policy content"
+        mock_doc.metadata = {"source": "refund-policy.md"}
+        mock_vs.similarity_search.return_value = [mock_doc]
+        mock_get_vs.return_value = mock_vs
+
+        result = _fetch_billing_policies()
+
+        # Verify vector store was queried
+        mock_get_vs.assert_called_with("billing")
+        assert mock_vs.similarity_search.called
+        assert "refund-policy.md" in result or "Refund policy content" in result
+
+    @patch("agents.workers.billing_support.get_vectorstore")
+    def test_fetch_billing_policies_handles_empty_results(
+        self, mock_get_vs, mock_openai_key
+    ):
+        """Test that _fetch_billing_policies handles empty vector store."""
+        from agents.workers.billing_support import _fetch_billing_policies
+
+        mock_vs = Mock()
+        mock_vs.similarity_search.return_value = []
+        mock_get_vs.return_value = mock_vs
+
+        result = _fetch_billing_policies()
+
+        assert result == ""
+
+    @patch("agents.workers.billing_support.get_vectorstore")
+    def test_fetch_billing_policies_handles_vectorstore_error(
+        self, mock_get_vs, mock_openai_key
+    ):
+        """Test that _fetch_billing_policies handles vector store unavailable."""
+        from agents.workers.billing_support import _fetch_billing_policies
+
+        mock_get_vs.return_value = None  # Vector store unavailable
+
+        result = _fetch_billing_policies()
+
+        assert result == ""
+
+    @patch("agents.workers.billing_support._fetch_billing_policies")
+    def test_get_cached_billing_policies_caches_after_first_call(
+        self, mock_fetch, mock_openai_key
+    ):
+        """Test that get_cached_billing_policies caches results after first call."""
+        from agents.workers.billing_support import (
+            _billing_policy_cache,
+            get_cached_billing_policies,
+        )
+
+        # Clear cache for this test
+        _billing_policy_cache.clear()
+
+        mock_fetch.return_value = "Cached policy content"
+
+        # First call - should fetch
+        result1 = get_cached_billing_policies()
+        assert mock_fetch.call_count == 1
+        assert result1 == "Cached policy content"
+
+        # Second call - should use cache
+        result2 = get_cached_billing_policies()
+        assert mock_fetch.call_count == 1  # Still 1, not called again
+        assert result2 == "Cached policy content"
+
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
+    @patch("agents.workers.billing_support.get_billing_agent")
+    def test_billing_tool_injects_cached_context(
+        self, mock_get_agent, mock_get_cached, mock_openai_key
+    ):
+        """Test that billing_support_tool injects cached policies into query."""
+        from agents.workers.billing_support import billing_support_tool
+
+        mock_get_cached.return_value = "REFUND POLICY: 30 days money back"
+
+        mock_agent = Mock()
+        mock_response = Mock()
+        mock_response.content = "Based on our policy..."
+        mock_agent.invoke.return_value = {"messages": [mock_response]}
+        mock_get_agent.return_value = mock_agent
+
+        billing_support_tool.invoke({"query": "What is your refund policy?"})
+
+        # Verify the enhanced query contains cached context
+        call_args = mock_agent.invoke.call_args[0][0]
+        enhanced_query = call_args["messages"][0]["content"]
+
+        assert "CACHED BILLING POLICIES" in enhanced_query
+        assert "REFUND POLICY: 30 days money back" in enhanced_query
+        assert "What is your refund policy?" in enhanced_query
+
+    @patch("agents.workers.billing_support.get_cached_billing_policies")
+    @patch("agents.workers.billing_support.get_billing_agent")
+    def test_billing_tool_fallback_when_no_cache(
+        self, mock_get_agent, mock_get_cached, mock_openai_key
+    ):
+        """Test that billing_support_tool works when cache is empty."""
+        from agents.workers.billing_support import billing_support_tool
+
+        mock_get_cached.return_value = ""  # Empty cache
+
+        mock_agent = Mock()
+        mock_response = Mock()
+        mock_response.content = "Response without cache"
+        mock_agent.invoke.return_value = {"messages": [mock_response]}
+        mock_get_agent.return_value = mock_agent
+
+        result = billing_support_tool.invoke({"query": "Simple billing question"})
+
+        # Verify agent was still called
+        mock_agent.invoke.assert_called_once()
+        call_args = mock_agent.invoke.call_args[0][0]
+        # Without cache, query should be passed directly
+        assert call_args["messages"][0]["content"] == "Simple billing question"
+        assert result == "Response without cache"

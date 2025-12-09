@@ -3,13 +3,20 @@ RAG/CAG Tools with Strategy-Specific Implementations.
 
 This module implements three different retrieval strategies:
 1. Pure RAG (Technical, General): Search vector store on every query
-2. Hybrid RAG/CAG (Billing): RAG first time, cache results for session
+2. Hybrid RAG/CAG (Billing): Static policies cached at tool wrapper level,
+   dynamic search via this tool for specific queries
 3. Pure CAG (Compliance): Load static documents at module level
+
+Strategy Details:
+- Pure RAG: Always fresh retrieval from vector store
+- Hybrid RAG/CAG: Caching implemented in billing_support_tool() wrapper,
+  this module provides the dynamic search component
+- Pure CAG: COMPLIANCE_CONTEXT loaded once at module import
 
 Phase: 5 - RAG/CAG Integration
 LangChain Version: v1.0+
 Documentation Reference: https://docs.langchain.com/oss/python/langchain/retrieval
-Last Updated: November 4, 2025
+Last Updated: December 8, 2025
 """
 
 import logging
@@ -157,15 +164,18 @@ def general_docs_search(query: str) -> str:
 
 
 # ============================================================================
-# Strategy 2: Pure RAG for Billing (simplified for compatibility)
+# Strategy 2: Hybrid RAG/CAG for Billing
 # ============================================================================
-# Dynamic retrieval: Search vector store on EVERY query
-# Note: Original Hybrid RAG/CAG with ToolRuntime caused JSON schema issues
-# when used in nested agents. Simplified to Pure RAG for reliability.
+# Hybrid approach implemented at the TOOL WRAPPER level (billing_support.py):
+# - First billing query: RAG retrieves static policies, caches them for session
+# - Subsequent queries: Cached policies injected into context (CAG behavior)
+# - This tool provides DYNAMIC search for specific queries (account details, etc.)
+#
+# The caching is handled by billing_support_tool() which:
+# 1. Fetches & caches static policies on first call
+# 2. Injects cached policies into agent context
+# 3. Agent uses this tool for additional dynamic lookups if needed
 # ============================================================================
-
-# Module-level cache for billing policies (simple caching without ToolRuntime)
-_billing_cache: dict[str, str] = {}
 
 
 @tool
@@ -180,7 +190,9 @@ def billing_docs_search(query: str) -> str:
     - Pricing information and plans
     - Billing errors or disputes
     
-    Strategy: Pure RAG - searches vector store every query for latest information.
+    Strategy: Hybrid RAG/CAG
+    - Static policies are pre-cached and injected into context (see billing_support_tool)
+    - This tool provides dynamic search for specific queries not covered by cache
     
     Args:
         query: The user's billing question
@@ -192,7 +204,7 @@ def billing_docs_search(query: str) -> str:
         >>> response = billing_docs_search("What's your refund policy?")
         >>> print(response)
     """
-    logger.info(f"[PURE RAG] Billing docs search: {query[:50]}...")
+    logger.info(f"[HYBRID RAG/CAG - Dynamic Search] Billing docs search: {query[:50]}...")
     
     try:
         # Get billing vector store
@@ -220,7 +232,7 @@ def billing_docs_search(query: str) -> str:
             )
         
         response = "\n\n".join(formatted_results)
-        logger.info(f"[PURE RAG] Billing docs: Retrieved {len(docs)} documents")
+        logger.info(f"[HYBRID RAG/CAG - Dynamic] Billing docs: Retrieved {len(docs)} documents")
         
         return response
         
