@@ -8,7 +8,6 @@ LangChain Version: v1.0+
 Last Updated: November 2, 2025
 """
 
-import asyncio
 import json
 import logging
 import os
@@ -569,38 +568,32 @@ async def chat_stream_endpoint(request: ChatRequest):
             all_messages = []
             
             try:
-                # Stream agent responses
-                async for event in agent.astream(
+                # Stream agent responses using astream_events for token-level streaming
+                # This provides granular events including individual LLM tokens
+                async for event in agent.astream_events(
                     {"messages": [{"role": "user", "content": request.message}]},
-                    config
+                    config,
+                    version="v2"
                 ):
-                    # Extract content from agent events
-                    # LangGraph streams events as dictionaries with message updates
-                    if "messages" in event:
-                        # Get the latest message
-                        messages = event["messages"]
-                        all_messages = messages  # Store for agent detection
-                        
-                        if messages and len(messages) > 0:
-                            latest_message = messages[-1]
-                            
-                            # Check if it's an assistant message
-                            if hasattr(latest_message, "content") and hasattr(latest_message, "type"):
-                                if latest_message.type == "ai" or getattr(latest_message, "role", None) == "assistant":
-                                    content = latest_message.content
-                                    
-                                    # Send the new content (delta from previous)
-                                    if content and content != full_response:
-                                        delta = content[len(full_response):]
-                                        if delta:
-                                            full_response = content
-                                            token_count += 1
-                                            
-                                            # Send token event
-                                            yield f"data: {json.dumps({'type': 'token', 'content': delta, 'session_id': request.session_id})}\\n\\n"
-                                            
-                                            # Small delay to prevent overwhelming the client
-                                            await asyncio.sleep(0.01)
+                    event_kind = event.get("event", "")
+                    
+                    # Capture messages for agent detection
+                    if event_kind == "on_chain_end" and "messages" in event.get("data", {}).get("output", {}):
+                        all_messages = event["data"]["output"]["messages"]
+                    
+                    # Stream tokens from the chat model (final response only)
+                    # Filter to only stream from the supervisor's final response, not sub-agent calls
+                    if event_kind == "on_chat_model_stream":
+                        # Get the chunk content
+                        chunk = event.get("data", {}).get("chunk")
+                        if chunk and hasattr(chunk, "content"):
+                            content = chunk.content
+                            if content and isinstance(content, str):
+                                full_response += content
+                                token_count += 1
+                                
+                                # Send token event
+                                yield f"data: {json.dumps({'type': 'token', 'content': content, 'session_id': request.session_id})}\n\n"
             
             except Exception as stream_error:
                 logger.error(f"Streaming error: {stream_error}", exc_info=True)

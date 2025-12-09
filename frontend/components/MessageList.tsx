@@ -270,6 +270,16 @@ export default function MessageList({ messages, isLoading = false, onExampleClic
                     >
                       {message.role === 'user' ? (
                         <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
+                      ) : message.role === 'assistant' && message.content === '' && isLoading ? (
+                        /* Show "Thinking..." animation inside empty assistant message during streaming */
+                        <div className="flex items-center gap-2">
+                          <div className="flex space-x-1">
+                            <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
+                            <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
+                            <div className="h-2 w-2 animate-bounce rounded-full bg-slate-400" />
+                          </div>
+                          <span className="text-xs text-slate-400">Thinking...</span>
+                        </div>
                       ) : (
                         <div className="prose prose-sm prose-invert max-w-none">
                           <ReactMarkdown
@@ -313,8 +323,8 @@ export default function MessageList({ messages, isLoading = false, onExampleClic
               </div>
             ))}
 
-            {/* Loading indicator */}
-            {isLoading && (
+            {/* Loading indicator - only show if there's no empty assistant message already (streaming uses placeholder) */}
+            {isLoading && !messages.some(m => m.role === 'assistant' && m.content === '') && (
               <div className="flex justify-start">
                 <div className="flex max-w-[85%] gap-3">
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white">

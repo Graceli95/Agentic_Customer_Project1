@@ -9,11 +9,14 @@
 
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
 
+/** Status of the message sending process */
+export type MessageStatus = 'idle' | 'sending' | 'waiting';
+
 interface MessageInputProps {
   /** Callback function when user submits a message */
   onSendMessage: (message: string) => void;
-  /** Whether the system is currently processing a message */
-  disabled?: boolean;
+  /** Current status of message processing */
+  status?: MessageStatus;
   /** Placeholder text for the input field */
   placeholder?: string;
 }
@@ -23,7 +26,7 @@ interface MessageInputProps {
  * 
  * Features:
  * - Text input with character limit (2000 chars per backend API)
- * - Submit button with loading state
+ * - Submit button with accurate status feedback (idle/sending/waiting)
  * - Keyboard shortcuts (Enter to send, Shift+Enter for new line)
  * - Input validation and trimming
  * - Disabled state while processing
@@ -34,16 +37,17 @@ interface MessageInputProps {
  * ```tsx
  * <MessageInput 
  *   onSendMessage={(msg) => handleSend(msg)}
- *   disabled={isLoading}
+ *   status="idle"
  *   placeholder="Type your message..."
  * />
  * ```
  */
 export default function MessageInput({
   onSendMessage,
-  disabled = false,
+  status = 'idle',
   placeholder = 'Type your message...',
 }: MessageInputProps) {
+  const isProcessing = status !== 'idle';
   const [message, setMessage] = useState('');
   const MAX_LENGTH = 2000; // Match backend validation
 
@@ -62,8 +66,8 @@ export default function MessageInput({
       return;
     }
 
-    // Don't send if disabled (processing)
-    if (disabled) {
+    // Don't send if processing
+    if (isProcessing) {
       return;
     }
 
@@ -100,7 +104,7 @@ export default function MessageInput({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          disabled={disabled}
+          disabled={isProcessing}
           placeholder={placeholder}
           rows={1}
           maxLength={MAX_LENGTH + 100}
@@ -120,16 +124,24 @@ export default function MessageInput({
       {/* Send button */}
       <button
         type="submit"
-        disabled={disabled || !message.trim() || isOverLimit}
+        disabled={isProcessing || !message.trim() || isOverLimit}
         className="flex h-12 items-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {disabled ? (
+        {status === 'sending' ? (
           <>
             <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
             Sending...
+          </>
+        ) : status === 'waiting' ? (
+          <>
+            <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            Waiting...
           </>
         ) : (
           <>

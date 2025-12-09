@@ -12,7 +12,7 @@
 
 import { useState } from 'react';
 import MessageList, { type Message } from './MessageList';
-import MessageInput from './MessageInput';
+import MessageInput, { type MessageStatus } from './MessageInput';
 import { 
   sendChatMessage, 
   sendChatMessageStream, 
@@ -48,8 +48,11 @@ interface ChatInterfaceProps {
  */
 export default function ChatInterface({ sessionId, onClearSession }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<MessageStatus>('idle');
   const [useStreaming, setUseStreaming] = useState(false); // Disable streaming by default (non-streaming works better with create_agent)
+  
+  // Derived state for convenience
+  const isProcessing = status !== 'idle';
 
   /**
    * Generates a unique message ID
@@ -76,11 +79,13 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
 
     // Add user message to conversation
     setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
+    setStatus('sending');
 
     try {
       console.log('✅ About to send request...');
       if (useStreaming) {
+        // Transition to waiting state (message sent, now waiting for AI)
+        setStatus('waiting');
         // Use streaming mode (SSE)
         const assistantMessageId = generateMessageId();
         let streamedContent = '';
@@ -152,6 +157,8 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
       } else {
         // Use non-streaming mode (traditional)
         console.log('📞 Calling non-streaming API...');
+        // Transition to waiting state (message sent, now waiting for AI)
+        setStatus('waiting');
         const response = await sendChatMessage(content, sessionId);
         console.log('📥 Received response:', response);
 
@@ -185,7 +192,7 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
       // Add error message to conversation
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setStatus('idle');
     }
   };
 
@@ -252,15 +259,15 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
           <div className="flex items-center gap-3">
             {/* Status indicator */}
             <div className="flex items-center gap-2 text-xs text-slate-400">
-              <span className={`h-2 w-2 rounded-full ${isLoading ? 'animate-pulse bg-yellow-400' : 'bg-emerald-400'}`} />
-              {isLoading ? 'Responding...' : `${messages.filter(m => m.role !== 'error').length} messages`}
+              <span className={`h-2 w-2 rounded-full ${isProcessing ? 'animate-pulse bg-yellow-400' : 'bg-emerald-400'}`} />
+              {status === 'sending' ? 'Sending...' : status === 'waiting' ? 'Responding...' : `${messages.filter(m => m.role !== 'error').length} messages`}
             </div>
 
             {/* Action buttons */}
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setUseStreaming(!useStreaming)}
-                disabled={isLoading}
+                disabled={isProcessing}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                   useStreaming
                     ? 'bg-blue-600 text-white'
@@ -275,7 +282,7 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
                 <>
                   <button
                     onClick={handleExportConversation}
-                    disabled={isLoading}
+                    disabled={isProcessing}
                     className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-slate-700 disabled:opacity-50"
                     title="Export chat"
                   >
@@ -283,7 +290,7 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
                   </button>
                   <button
                     onClick={handleClearConversation}
-                    disabled={isLoading}
+                    disabled={isProcessing}
                     className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-red-900/50 hover:text-red-300 disabled:opacity-50"
                     title="Clear chat"
                   >
@@ -300,7 +307,7 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
       <div style={{ flex: 1, overflow: 'hidden', background: 'linear-gradient(to bottom, #0f172a, #020617)', width: '100%' }}>
         <MessageList 
           messages={messages} 
-          isLoading={isLoading} 
+          isLoading={isProcessing} 
           onExampleClick={handleSendMessage}
         />
       </div>
@@ -310,7 +317,7 @@ export default function ChatInterface({ sessionId, onClearSession }: ChatInterfa
         <div style={{ margin: '0 auto', width: '100%', maxWidth: '900px', padding: '16px' }}>
           <MessageInput
             onSendMessage={handleSendMessage}
-            disabled={isLoading}
+            status={status}
             placeholder="Type your question..."
           />
         </div>
