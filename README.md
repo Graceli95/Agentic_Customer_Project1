@@ -314,6 +314,9 @@ Agentic_Customer_Project1/
 │   │   ├── simple_agent.py     # Phase 2: Simple agent (reference)
 │   │   ├── supervisor_agent.py # Phase 3: Supervisor ✅
 │   │   └── workers/            # Phase 3: Specialized workers ✅
+│   │       ├── billing_support.py    # Billing worker ✅
+│   │       ├── compliance.py         # Compliance worker ✅
+│   │       ├── general_info.py       # General info worker ✅
 │   │       └── technical_support.py  # Technical worker ✅
 │   ├── data/                   # Data and documents
 │   │   └── docs/              # Document repositories (Phase 5+)
